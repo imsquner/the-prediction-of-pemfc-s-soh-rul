@@ -1,0 +1,15 @@
+# Python 虚拟环境
+.venv/
+# Python 编译缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+# IDE 配置（直接忽略整个IDE配置文件夹）
+.idea/
+.vscode/
+# 可选：忽略临时数据/模型文件
+processed_data_*.npz
+predictions/
+best_gru_model_*.pth
+
