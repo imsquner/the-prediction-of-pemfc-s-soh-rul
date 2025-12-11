@@ -1,10 +1,12 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QGridLayout, QPushButton,
                              QLabel, QSpinBox, QMessageBox,
                              QComboBox, QDialog)
-from PyQt6.QtCore import Qt, pyqtSlot, QProcess
+from PyQt6.QtCore import Qt, pyqtSlot, QProcess, QTimer
 import sys
 import os
 import glob
+import threading
+import runpy
 from datetime import datetime
 from typing import List
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
@@ -17,20 +19,72 @@ from .plot_worker import (
     FEATURE_CN_MAP,
 )
 import pandas as pd
+import shutil
 
-# ================= 固定路径配置（用户可根据实际情况修改）=================
-RAW_DATA_DIR = "./data"  # 原始数据目录（FC1/FC2）
-PROCESSED_DATA_DIR = "./processed_results"  # 处理后数据目录
-SOH_DATA_DIR = "./soh_data"  # SOH数据目录
-RAW_VISUAL_DIR = "./visualization/truedata"  # 原始数据合并后输出目录
-CATBOOST_RESULT_PATTERN = "./catboost_results/feature_importance_results_*.csv"
+# ================= 路径与运行环境配置 =================
+# 在打包(onefile)后，PyInstaller会将资源解压到临时目录(sys._MEIPASS)，
+# 这里统一计算基准目录，避免依赖当前工作目录导致找不到CSV或误触发自启动。
+def _get_base_dir() -> str:
+    if hasattr(sys, "_MEIPASS"):
+        return sys._MEIPASS
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(os.path.abspath(sys.executable))
+    # 源码模式：pages.py 位于 gui 子目录，需回退一级到项目根目录
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+BASE_DIR = _get_base_dir()
+
+
+def _abs_path(*parts: str) -> str:
+    return os.path.abspath(os.path.join(BASE_DIR, *parts))
+
+
+def _script_args(script_path: str):
+    """为脚本生成子进程启动参数，冻结状态下用 -c 避免再次启动GUI。"""
+    if getattr(sys, "frozen", False):
+        return ["-c", f"import runpy; runpy.run_path(r'{script_path}', run_name='__main__')"]
+    return [script_path]
+
+
+def _run_script_in_thread(script_path: str, on_finish=None, on_error=None):
+    """冻结状态下在后台线程直接 run_path，避免启动新的可执行文件。"""
+    def _worker():
+        try:
+            runpy.run_path(script_path, run_name="__main__")
+            if callable(on_finish):
+                on_finish()
+        except Exception as exc:  # noqa: BLE001 - 直接报告
+            if callable(on_error):
+                on_error(exc)
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+    return t
+
+
+# 原始/处理/可视化数据路径（改为绝对路径，兼容打包后）
+RAW_DATA_DIR = _abs_path("data")
+PROCESSED_DATA_DIR = _abs_path("processed_results")
+SOH_DATA_DIR = _abs_path("soh_data")
+RAW_VISUAL_DIR = _abs_path("visualization", "truedata")
+
+CATBOOST_RESULT_PATTERN = _abs_path("catboost_results", "feature_importance_results_*.csv")
 PREDICTION_PATTERNS = [
-    "./train_results_paper/**/csv_files/predictions.csv",
-    "./train_results/**/csv_files/predictions.csv",
+    _abs_path("train_results_paper", "**", "csv_files", "predictions.csv"),
+    _abs_path("train_results", "**", "csv_files", "predictions.csv"),
 ]
 METRICS_PATTERNS = [
-    "./train_results_paper/**/tables/metrics_overall.csv",
-    "./train_results/**/tables/metrics_overall.csv",
+    _abs_path("train_results_paper", "**", "tables", "metrics_overall.csv"),
+    _abs_path("train_results", "**", "tables", "metrics_overall.csv"),
+]
+
+# 可清理的生成文件路径（不触碰原始数据和模型权重）
+CLEAN_TARGETS = [
+    (PROCESSED_DATA_DIR, ("*.csv", "*.npz")),
+    (RAW_VISUAL_DIR, ("*.csv",)),
+    (_abs_path("catboost_results"), ("*.csv",)),
+    (_abs_path("train_results_paper"), ("**/*.csv", "**/*.npz", "**/*.json", "**/*.txt", "**/*.png")),
+    (_abs_path("train_results"), ("**/*.csv", "**/*.npz", "**/*.json", "**/*.txt", "**/*.png")),
 ]
 TRAIN_WAVELET = "sym8"
 TRAIN_WINDOW = 50
@@ -192,18 +246,33 @@ class FeatureImportancePage(QWidget):
             QMessageBox.information(self, "任务进行中", "CatBoost分析正在运行，请稍后。")
             return
 
-        self.analysis_process = QProcess(self)
-        self.analysis_process.setProgram(sys.executable)
-        self.analysis_process.setArguments(["pemfc_catboost_analysis.py"])
-        self.analysis_process.setWorkingDirectory(os.getcwd())
-        self.analysis_process.readyReadStandardOutput.connect(self._on_catboost_output)
-        self.analysis_process.readyReadStandardError.connect(self._on_catboost_output)
-        self.analysis_process.finished.connect(self._on_catboost_finished)
+        script_path = os.path.join(BASE_DIR, "pemfc_catboost_analysis.py")
+        if not os.path.exists(script_path):
+            QMessageBox.warning(self, "缺少脚本", "未找到 pemfc_catboost_analysis.py，请确认与可执行文件同目录或使用源码环境运行。")
+            self.monitor.log_error("未找到 pemfc_catboost_analysis.py，已取消执行")
+            return
 
+        # 冻结态：避免再启动GUI，直接线程内 run_path；源码态仍用QProcess捕获输出
         self.run_analysis_btn.setEnabled(False)
         self.monitor.update_progress("启动CatBoost分析", 5)
         self.monitor.log("🚀 已启动CatBoost分析脚本 pemfc_catboost_analysis.py")
-        self.analysis_process.start()
+
+        if getattr(sys, "frozen", False):
+            def _on_finish():
+                QTimer.singleShot(0, lambda: self._on_catboost_finished(0, None))
+            def _on_err(exc):
+                QTimer.singleShot(0, lambda: self.monitor.log_error(f"CatBoost分析失败: {exc}"))
+                QTimer.singleShot(0, lambda: self._on_catboost_finished(1, None))
+            _run_script_in_thread(script_path, on_finish=_on_finish, on_error=_on_err)
+        else:
+            self.analysis_process = QProcess(self)
+            self.analysis_process.setProgram(sys.executable)
+            self.analysis_process.setArguments(_script_args(script_path))
+            self.analysis_process.setWorkingDirectory(BASE_DIR)
+            self.analysis_process.readyReadStandardOutput.connect(self._on_catboost_output)
+            self.analysis_process.readyReadStandardError.connect(self._on_catboost_output)
+            self.analysis_process.finished.connect(self._on_catboost_finished)
+            self.analysis_process.start()
 
     def _on_catboost_output(self):
         if not self.analysis_process:
@@ -453,7 +522,7 @@ class DataProcessingPage(QWidget):
             patterns = [
                 os.path.join(RAW_VISUAL_DIR, f"{dataset}_merged_*.csv"),  # 优先使用合并后的文件
                 os.path.join(RAW_DATA_DIR, f"{dataset}_Ageing_part*.csv"),
-                os.path.join("./datatest", f"{dataset}_Ageing_part*.csv")
+                os.path.join(_abs_path("datatest"), f"{dataset}_Ageing_part*.csv")
             ]
             return find_latest_file(patterns)
         except Exception as e:
@@ -476,7 +545,7 @@ class DataProcessingPage(QWidget):
         """合并原始分片并保存到可视化目录"""
         patterns = [
             os.path.join(RAW_DATA_DIR, f"{dataset}_Ageing_part*.csv"),
-            os.path.join("./datatest", f"{dataset}_Ageing_part*.csv")
+            os.path.join(_abs_path("datatest"), f"{dataset}_Ageing_part*.csv")
         ]
         files = []
         for pattern in patterns:
@@ -530,18 +599,32 @@ class DataProcessingPage(QWidget):
             QMessageBox.information(self, "任务进行中", "数据处理脚本正在运行，请稍后。")
             return
 
-        self.processing_process = QProcess(self)
-        self.processing_process.setProgram(sys.executable)
-        self.processing_process.setArguments(["data_processing.py"])
-        self.processing_process.setWorkingDirectory(os.getcwd())
-        self.processing_process.readyReadStandardOutput.connect(self._on_processing_output)
-        self.processing_process.readyReadStandardError.connect(self._on_processing_output)
-        self.processing_process.finished.connect(self._on_processing_finished)
+        script_path = os.path.join(BASE_DIR, "data_processing.py")
+        if not os.path.exists(script_path):
+            QMessageBox.warning(self, "缺少脚本", "未找到 data_processing.py，请确认与可执行文件同目录或使用源码环境运行。")
+            self.monitor.log_error("未找到 data_processing.py，已取消执行")
+            return
 
         self.run_processing_btn.setEnabled(False)
         self.monitor.update_progress("启动数据处理脚本", 5)
         self.monitor.log("🚀 已启动 data_processing.py")
-        self.processing_process.start()
+
+        if getattr(sys, "frozen", False):
+            def _on_finish():
+                QTimer.singleShot(0, lambda: self._on_processing_finished(0, None))
+            def _on_err(exc):
+                QTimer.singleShot(0, lambda: self.monitor.log_error(f"数据处理失败: {exc}"))
+                QTimer.singleShot(0, lambda: self._on_processing_finished(1, None))
+            _run_script_in_thread(script_path, on_finish=_on_finish, on_error=_on_err)
+        else:
+            self.processing_process = QProcess(self)
+            self.processing_process.setProgram(sys.executable)
+            self.processing_process.setArguments(_script_args(script_path))
+            self.processing_process.setWorkingDirectory(BASE_DIR)
+            self.processing_process.readyReadStandardOutput.connect(self._on_processing_output)
+            self.processing_process.readyReadStandardError.connect(self._on_processing_output)
+            self.processing_process.finished.connect(self._on_processing_finished)
+            self.processing_process.start()
 
     def _on_processing_output(self):
         if not self.processing_process:
@@ -676,6 +759,16 @@ class LifePredictionPage(QWidget):
         self.plot_fc2_btn.clicked.connect(lambda: self.plot_predictions("FC2", max_points=200000))
         control_layout.addWidget(self.plot_fc2_btn, 1, 1)
 
+        self.clean_btn = QPushButton("清理生成文件")
+        self.clean_btn.setMinimumHeight(44)
+        self.clean_btn.setStyleSheet("""
+            QPushButton { background-color: #86909C; color: white; border: none; border-radius: 8px;
+                          padding: 12px 18px; font-size: 14px; font-weight: 600; letter-spacing: 0.2px; }
+            QPushButton:hover { background-color: #A8ABB2; }
+        """)
+        self.clean_btn.clicked.connect(self.clean_generated_files)
+        control_layout.addWidget(self.clean_btn, 1, 2)
+
         layout.addWidget(control_group)
 
         chart_group = QGroupBox("预测 vs 真实曲线")
@@ -691,6 +784,36 @@ class LifePredictionPage(QWidget):
 
         layout.addWidget(chart_group)
 
+    def clean_generated_files(self):
+        reply = QMessageBox.question(
+            self,
+            "清理确认",
+            "将删除处理/训练生成的CSV、NPZ、报告和图像，不会删除原始数据。是否继续？",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        removed = 0
+        for directory, patterns in CLEAN_TARGETS:
+            if not os.path.isdir(directory):
+                continue
+            for pattern in patterns:
+                for path in glob.glob(os.path.join(directory, pattern), recursive=True):
+                    try:
+                        if os.path.isfile(path):
+                            os.remove(path)
+                            removed += 1
+                        elif os.path.isdir(path) and pattern.startswith("**/"):
+                            # 仅当递归匹配到空目录时清理
+                            shutil.rmtree(path, ignore_errors=True)
+                    except Exception as e:
+                        self.monitor.log_error(f"删除失败: {path} -> {e}")
+
+        self.monitor.log(f"🧹 已清理生成文件: {removed} 个")
+        QMessageBox.information(self, "完成", f"已清理生成文件 {removed} 个。")
+
     def find_latest_prediction(self):
         return find_latest_file(PREDICTION_PATTERNS)
 
@@ -699,18 +822,32 @@ class LifePredictionPage(QWidget):
             QMessageBox.information(self, "任务进行中", "训练已在运行，请稍后。")
             return
 
-        self.train_process = QProcess(self)
-        self.train_process.setProgram(sys.executable)
-        self.train_process.setArguments(["train.py"])
-        self.train_process.setWorkingDirectory(os.getcwd())
-        self.train_process.readyReadStandardOutput.connect(self._on_train_output)
-        self.train_process.readyReadStandardError.connect(self._on_train_output)
-        self.train_process.finished.connect(self._on_train_finished)
+        script_path = os.path.join(BASE_DIR, "train.py")
+        if not os.path.exists(script_path):
+            QMessageBox.warning(self, "缺少脚本", "未找到 train.py，请确认与可执行文件同目录或使用源码环境运行。")
+            self.monitor.log_error("未找到 train.py，已取消执行")
+            return
 
         self.run_train_btn.setEnabled(False)
         self.monitor.update_progress("启动训练", 5)
         self.monitor.log("🚀 已启动训练脚本 train.py")
-        self.train_process.start()
+
+        if getattr(sys, "frozen", False):
+            def _on_finish():
+                QTimer.singleShot(0, lambda: self._on_train_finished(0, None))
+            def _on_err(exc):
+                QTimer.singleShot(0, lambda: self.monitor.log_error(f"训练失败: {exc}"))
+                QTimer.singleShot(0, lambda: self._on_train_finished(1, None))
+            _run_script_in_thread(script_path, on_finish=_on_finish, on_error=_on_err)
+        else:
+            self.train_process = QProcess(self)
+            self.train_process.setProgram(sys.executable)
+            self.train_process.setArguments(_script_args(script_path))
+            self.train_process.setWorkingDirectory(BASE_DIR)
+            self.train_process.readyReadStandardOutput.connect(self._on_train_output)
+            self.train_process.readyReadStandardError.connect(self._on_train_output)
+            self.train_process.finished.connect(self._on_train_finished)
+            self.train_process.start()
 
     def _on_train_output(self):
         if not self.train_process:

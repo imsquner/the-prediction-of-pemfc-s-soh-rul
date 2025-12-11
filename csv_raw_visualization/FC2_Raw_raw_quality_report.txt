@@ -1,0 +1,33 @@
+============================================================
+CSV Raw Data Quality Report - FC2_Raw
+Report Time: 2025-12-11 00:13:39
+============================================================
+
+1. Basic Information
+    Dataset: FC2_Raw
+    Folder Path: datatest
+    CSV Files: ['FC2_Ageing_part1.csv', 'FC2_Ageing_part2.csv']
+    Total Samples: 127,370
+    Features: 22
+    Feature List: ['time', 'stack_voltage', 'J_A_cm2', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity', 'Unnamed:_25', 'file_source']
+
+2. Data Quality Checks
+    Missing Values: 127370 (4.5455%)
+    Duplicate Rows: 0 (0.0000%)
+
+    Voltage Statistics:
+        Min: 2.865 V
+        Max: 4.986 V
+        Mean: 3.220 V
+        Std: 0.075 V
+        Range: 2.121 V
+
+3. Quality Score
+    Overall Quality Score: 55/100
+
+4. Recommendations
+    Poor raw data quality, significant preprocessing and cleaning needed.
+
+============================================================
+Raw Data Analysis Complete
+============================================================

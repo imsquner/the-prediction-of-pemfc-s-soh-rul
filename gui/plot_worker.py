@@ -316,6 +316,48 @@ def _select_numeric_signals(df: pd.DataFrame, exclude: List[str], max_signals: i
     return [c for c, _ in variances[:max_signals]]
 
 
+def _estimate_rul_from_series(x_axis: np.ndarray, series: np.ndarray,
+                              threshold_ratio: float = 0.96) -> Tuple[Optional[float], Optional[float], Optional[float]]:
+    """基于阈值比例估计EOL时间与RUL（简单线性插值）。
+
+    返回: (阈值, EOL时间, RUL=EOL-当前时间)。若无法计算，则返回(None, None, None)。
+    """
+    try:
+        if len(x_axis) == 0 or len(series) == 0:
+            return None, None, None
+        x_axis = np.asarray(x_axis, dtype=float)
+        series = np.asarray(series, dtype=float)
+        if not np.all(np.isfinite(x_axis)) or not np.all(np.isfinite(series)):
+            return None, None, None
+
+        # 按x排序确保插值正确
+        order = np.argsort(x_axis)
+        x_sorted = x_axis[order]
+        y_sorted = series[order]
+
+        threshold = y_sorted[0] * threshold_ratio
+        below = np.where(y_sorted <= threshold)[0]
+        if len(below) == 0:
+            return threshold, None, None
+        idx = below[0]
+        if idx == 0:
+            eol_time = float(x_sorted[0])
+        else:
+            x1, x2 = x_sorted[idx - 1], x_sorted[idx]
+            y1, y2 = y_sorted[idx - 1], y_sorted[idx]
+            if y2 == y1:
+                eol_time = float(x2)
+            else:
+                # 线性插值求过阈值时刻
+                eol_time = float(x1 + (threshold - y1) * (x2 - x1) / (y2 - y1))
+
+        current_time = float(x_sorted[-1])
+        rul = max(eol_time - current_time, 0.0)
+        return float(threshold), float(eol_time), float(rul)
+    except Exception:
+        return None, None, None
+
+
 def plot_raw_views(csv_path: str, dataset_label: str = "FC1", max_signals: int = 5,
                    time_col: Optional[str] = None, voltage_col: Optional[str] = None,
                    selected_signals: Optional[List[str]] = None):
@@ -441,8 +483,12 @@ def plot_prediction_vs_true(pred_csv_path: str, max_points: int = 1500, dataset_
             if col not in df.columns:
                 raise ValueError(f"预测结果缺少必要列：{col}；现有列: {list(df.columns)}")
 
-        max_points = min(max_points, len(df))
-        plot_df = df.iloc[:max_points].copy()
+        if len(df) > max_points:
+            # 等距抽样，覆盖全时间轴（含未来）
+            indices = np.linspace(0, len(df) - 1, max_points).astype(int)
+            plot_df = df.iloc[indices].copy()
+        else:
+            plot_df = df.copy()
         # 使用时间列优先，其次使用样本序号
         if "time" in plot_df.columns:
             x_axis = plot_df["time"].to_numpy()
@@ -454,16 +500,30 @@ def plot_prediction_vs_true(pred_csv_path: str, max_points: int = 1500, dataset_
         fig, ax = plt.subplots(figsize=(12, 6), dpi=100)
         target_series = plot_df["target"].to_numpy()
         pred_series = plot_df["prediction"].to_numpy()
-        ax.plot(x_axis, target_series, label="真实值", color="#165DFF", linewidth=1.8)
-        ax.plot(x_axis, pred_series, label="预测值", color="#F53F3F", linewidth=1.8, linestyle='--')
 
-        # 置信区间可选
+        # 标记未来滚动预测（split包含future 或 target缺失）
+        if "split" in plot_df.columns:
+            future_mask = plot_df["split"].str.contains("future", case=False, na=False).to_numpy()
+        else:
+            future_mask = np.isnan(target_series)
+        known_mask = ~future_mask
+
+        # 已知区间
+        ax.plot(x_axis[known_mask], target_series[known_mask], label="真实值", color="#165DFF", linewidth=1.8)
+        ax.plot(x_axis[known_mask], pred_series[known_mask], label="预测值(已知)", color="#F53F3F", linewidth=1.8, linestyle='--')
+
+        # 未来滚动预测区间
+        if future_mask.any():
+            ax.plot(x_axis[future_mask], pred_series[future_mask], label="滚动预测(未来)",
+                    color="#00B42A", linestyle=':', linewidth=1.6, alpha=0.9)
+
+        # 置信区间可选（仅对已知区间）
         if "ci_lower" in plot_df.columns and "ci_upper" in plot_df.columns:
-            ax.fill_between(x_axis, plot_df["ci_lower"], plot_df["ci_upper"], color="#F53F3F", alpha=0.15,
-                            label="95% 置信区间")
+            ax.fill_between(x_axis[known_mask], plot_df.loc[known_mask, "ci_lower"], plot_df.loc[known_mask, "ci_upper"],
+                            color="#F53F3F", alpha=0.15, label="95% 置信区间")
 
-        # 计算指标（忽略缺失）
-        valid_mask = ~np.isnan(target_series) & ~np.isnan(pred_series)
+        # 计算指标（仅已知区间）
+        valid_mask = known_mask & ~np.isnan(target_series) & ~np.isnan(pred_series)
         if valid_mask.any():
             mae = float(np.mean(np.abs(target_series[valid_mask] - pred_series[valid_mask])))
             rmse = float(np.sqrt(np.mean((target_series[valid_mask] - pred_series[valid_mask]) ** 2)))
@@ -471,12 +531,37 @@ def plot_prediction_vs_true(pred_csv_path: str, max_points: int = 1500, dataset_
         else:
             metrics_txt = "MAE=NA, RMSE=NA"
 
-        ax.set_title(f"{dataset_label} 预测 vs 真实 ({max_points} 点) | {metrics_txt}",
+        # 估算RUL并标注（基于0.96阈值线性插值）
+        rul_info_lines = []
+        true_thr, true_eol, true_rul = _estimate_rul_from_series(x_axis[~np.isnan(target_series)],
+                                    target_series[~np.isnan(target_series)])
+        pred_thr, pred_eol, pred_rul = _estimate_rul_from_series(x_axis[~np.isnan(pred_series)],
+                                    pred_series[~np.isnan(pred_series)])
+
+        if true_eol is not None:
+            ax.axvline(true_eol, color="#165DFF", linestyle=":", alpha=0.7, linewidth=1.3,
+                       label=f"真实EOL≈{true_eol:.1f}h")
+            rul_info_lines.append(f"真实RUL≈{true_rul:.1f}h @EOL≈{true_eol:.1f}h")
+        if pred_eol is not None:
+            ax.axvline(pred_eol, color="#F53F3F", linestyle=":", alpha=0.7, linewidth=1.3,
+                       label=f"预测EOL≈{pred_eol:.1f}h")
+            rul_info_lines.append(f"预测RUL≈{pred_rul:.1f}h @EOL≈{pred_eol:.1f}h")
+
+        # 标题附加RUL文本
+        rul_txt = " | ".join(rul_info_lines) if rul_info_lines else "RUL不可用"
+        ax.set_title(f"{dataset_label} 预测 vs 真实 ({max_points} 点) | {metrics_txt} | {rul_txt}",
                      fontsize=14, fontweight="bold", color="#1D2129")
         ax.set_xlabel(x_label, fontsize=12, color="#1D2129")
         ax.set_ylabel("电压 / 目标值", fontsize=12, color="#1D2129")
         ax.grid(True, alpha=0.3, linestyle='--', color="#E5E6EB")
         ax.legend(loc='best')
+
+        # 拉长时间轴到1500h以便观察滚动RUL
+        if np.issubdtype(x_axis.dtype, np.number):
+            x_min = float(np.nanmin(x_axis)) if len(x_axis) else 0.0
+            x_max = float(np.nanmax(x_axis)) if len(x_axis) else 0.0
+            ax.set_xlim(left=x_min, right=max(1500.0, x_max * 1.02))
+
         plt.tight_layout()
         return fig
     except Exception as e:

@@ -34,7 +34,7 @@ sns.set_palette("husl")
 COLUMN_MAPPING = {
     'Time (h)': 'time',
     'Utot (V)': 'stack_voltage',
-    'J (A/cm²)': 'current_density',
+    'J (A/cm2)': 'current_density',
     'I (A)': 'current',
     'TinH2 (°C)': 'hydrogen_inlet_temp',
     'ToutH2 (°C)': 'hydrogen_outlet_temp',
@@ -473,7 +473,7 @@ class CSVDataVisualizer:
                     ax.plot(current_density_data.values, linewidth=0.8, alpha=0.7, color='green')
                     ax.set_xlabel('Sample Index', fontsize=10)
 
-                ax.set_ylabel('Current Density (A/cm²)', fontsize=10)
+                ax.set_ylabel('Current Density (A/cm2)', fontsize=10)
                 ax.set_title(f'{self.dataset_name} - Raw Current Density', fontsize=12, pad=10)
                 ax.grid(True, alpha=0.3)
                 ax.tick_params(labelsize=9)

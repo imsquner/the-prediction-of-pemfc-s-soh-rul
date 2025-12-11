@@ -708,7 +708,7 @@ def load_and_merge_data(data_path, dataset_name="FC1"):
             column_mapping = {
                 'Time (h)': 'time',
                 'Utot (V)': 'stack_voltage',
-                'J (A/cm²)': 'current_density',
+                'J (A/cm2)': 'current_density',
                 'I (A)': 'current',
                 'TinH2 (°C)': 'hydrogen_inlet_temp',
                 'ToutH2 (°C)': 'hydrogen_outlet_temp',

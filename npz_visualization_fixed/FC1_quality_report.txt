@@ -1,0 +1,26 @@
+============================================================
+NPZ Data Quality Report - FC1
+Report Time: 2025-12-12 05:15:21
+============================================================
+
+1. Basic Information
+    Dataset: FC1
+    File Path: processed_results\FC1\FC1_processed_20251209_200621.npz
+    Samples: 143,862
+    Features: 20
+    Feature List: ['time', 'stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+
+2. Data Quality Checks
+    Missing Values: 0 (0.0000%)
+    Duplicate Rows: 0 (0.0000%)
+
+    Voltage Range: 3.196 - 3.359 V
+3. Quality Score
+    Overall Quality Score: 100/100
+
+4. Recommendations
+    Excellent data quality, ready for analysis and modeling.
+
+============================================================
+Analysis Complete
+============================================================

@@ -4,6 +4,7 @@
 """
 
 import os
+import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -15,6 +16,17 @@ import warnings
 import textwrap
 from datetime import datetime
 import seaborn as sns
+
+# 避免Windows终端GBK编码报错，强制UTF-8输出
+os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+if hasattr(__builtins__, "print"):
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            getattr(sys.stdout, "reconfigure")(encoding="utf-8", errors="replace")
+        if hasattr(sys.stderr, "reconfigure"):
+            getattr(sys.stderr, "reconfigure")(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 warnings.filterwarnings('ignore')
 
@@ -28,7 +40,7 @@ plt.rcParams['axes.unicode_minus'] = False
 CSV_COLUMN_MAPPING = {
     'Time (h)': 'time',
     'Utot (V)': 'stack_voltage',
-    'J (A/cm²)': 'current_density',
+    'J (A/cm2)': 'current_density',
     'I (A)': 'current',
     'TinH2 (°C)': 'hydrogen_inlet_temp',
     'ToutH2 (°C)': 'hydrogen_outlet_temp',
@@ -90,21 +102,21 @@ def load_and_preprocess_data(data_dir="data", dataset_name="FC1"):
             try:
                 print(f"  Trying encoding: {encoding}")
                 df = pd.read_csv(file_path, encoding=encoding, engine='python')
-                print(f"  ✓ Successfully read file with {encoding} encoding")
+                print(f"  OK read with {encoding}")
                 break
             except UnicodeDecodeError as e:
-                print(f"  ✗ Encoding {encoding} failed: {str(e)[:50]}...")
+                print(f"  FAIL encoding {encoding}: {str(e)[:50]}...")
                 continue
             except Exception as e:
-                print(f"  ✗ Encoding {encoding} encountered other error: {str(e)[:50]}...")
+                print(f"  FAIL encoding {encoding}, other error: {str(e)[:50]}...")
                 continue
 
         if df is None:
             # 如果所有编码都失败，尝试不指定编码
-            print("  ⚠ All encoding attempts failed, trying default encoding...")
+            print("  WARN all encodings failed, try default encoding...")
             try:
                 df = pd.read_csv(file_path, engine='python')
-                print("  ✓ Successfully read file with default encoding")
+                print("  OK read with default encoding")
             except Exception as e:
                 raise ValueError(f"Cannot read file {file_name}: {str(e)}")
 
@@ -297,7 +309,7 @@ def catboost_feature_importance_analysis(data_dict, target_col='stack_voltage'):
     print("\nModel Evaluation Results (Validation Set):")
     print(f"  Mean Absolute Error (MAE): {mae:.4f} V")
     print(f"  Root Mean Square Error (RMSE): {rmse:.4f} V")
-    print(f"  Coefficient of Determination (R²): {r2:.4f}")
+    print(f"  Coefficient of Determination (R2): {r2:.4f}")
 
     # 获取特征重要性
     print("\nCalculating feature importance...")
@@ -389,6 +401,14 @@ def create_visualizations(importance_df, data_dict, save_dir='results'):
     plt.close()
 
     # ========== Chart 2: Cumulative Importance Curve ==========
+    import sys
+ 
+    # 强制stdout/stderr使用utf-8，避免Windows控制台GBK编码报错
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
     print("\nGenerating Chart 2: Cumulative Importance Curve...")
 
     plt.figure(figsize=(10, 6))
@@ -509,7 +529,7 @@ def save_results_and_report(importance_df, model_metrics, data_dict,
         f.write("-" * 40 + "\n")
         f.write(f"Mean Absolute Error (MAE): {model_metrics['MAE']:.4f} V\n")
         f.write(f"Root Mean Square Error (RMSE): {model_metrics['RMSE']:.4f} V\n")
-        f.write(f"Coefficient of Determination (R²): {model_metrics['R2']:.4f}\n\n")
+        f.write(f"Coefficient of Determination (R2): {model_metrics['R2']:.4f}\n\n")
 
         # 特征重要性排名（前10）
         f.write("3. Feature Importance Ranking (Top 10)\n")
