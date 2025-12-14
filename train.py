@@ -2656,6 +2656,38 @@ class PEMFCTrainer:
         preds_scaled = np.asarray(preds, dtype=float)
         preds_orig = self.data_processor.inverse_transform_target(preds_scaled)
 
+        # 根据最近趋势或兜底衰减，为未来预测添加轻微下行斜率，避免走势过平
+        decay_slope = 0.0
+        fallback_decay = getattr(self.config, "future_voltage_decay_per_hour", -0.00018)
+        recent_target = split_data.get('test_original')
+        recent_time = split_data.get('test_time')
+        try:
+            if recent_target is not None and len(recent_target) > 5:
+                tail_n = min(200, len(recent_target))
+                y_tail = np.asarray(recent_target[-tail_n:], dtype=float).flatten()
+                if recent_time is not None and len(recent_time) >= tail_n:
+                    t_tail = np.asarray(recent_time[-tail_n:], dtype=float).flatten()
+                else:
+                    t_tail = np.arange(len(y_tail), dtype=float) * dt_base
+                mask = np.isfinite(t_tail) & np.isfinite(y_tail)
+                if mask.sum() >= 2:
+                    slope, _ = np.polyfit(t_tail[mask], y_tail[mask], 1)
+                    decay_slope = slope if slope < 0 else fallback_decay
+                else:
+                    decay_slope = fallback_decay
+            else:
+                decay_slope = fallback_decay
+
+            if decay_slope < 0:
+                decay_adjust = decay_slope * np.arange(1, len(preds_orig) + 1, dtype=float) * dt_future
+                preds_orig = preds_orig + decay_adjust
+                # 限制不过度下穿近期真实电压
+                floor_ref = np.nanpercentile(np.asarray(recent_target, dtype=float).flatten(), 2) if recent_target is not None else None
+                if floor_ref is not None and np.isfinite(floor_ref):
+                    preds_orig = np.maximum(preds_orig, floor_ref * 0.95)
+        except Exception as decay_err:
+            self.logger.log_warning(f"未来衰减修正失败，使用原始预测: {decay_err}")
+
         return {
             'time': np.asarray(future_times, dtype=float),
             'predictions': preds_orig,
@@ -2764,6 +2796,53 @@ class PEMFCTrainer:
                 time_series_aligned,
                 pred_v_initial_override=pred_v_initial_override
             )
+
+            # 使用未来滚动预测估计更长时间的预测RUL
+            try:
+                if future_result is not None:
+                    pred_full_for_rul = np.concatenate([
+                        np.asarray(pred_voltage_for_rul, dtype=float).flatten(),
+                        np.asarray(future_result['predictions'], dtype=float).flatten()
+                    ])
+                    time_full_for_rul = np.concatenate([
+                        np.asarray(time_series_aligned, dtype=float).flatten(),
+                        np.asarray(future_result['time'], dtype=float).flatten()
+                    ])
+                    pred_V0_full, _ = calculator.calculate_v_initial(pred_full_for_rul)
+                    pred_soh_full = calculator.calculate_soh(pred_full_for_rul, pred_V0_full)
+                    pred_rul_full = calculator.calculate_rul(pred_soh_full, time_full_for_rul)
+                    rul_results['pred_rul_with_future'] = pred_rul_full
+                    self.logger.log_info(
+                        f"预测RUL(含未来外推): {pred_rul_full.get('rul_actual', 'N/A')}h, 方法={pred_rul_full.get('method')}")
+            except Exception as pred_future_err:
+                self.logger.log_warning(f"未来RUL计算失败: {pred_future_err}")
+
+            # 计算基于全时间轴真实序列的RUL，检查是否在训练段已越阈值
+            try:
+                time_segments = []
+                for key in ['train_time', 'val_time', 'test_time']:
+                    seg = data_result['split_data'].get(key)
+                    if seg is not None:
+                        time_segments.append(np.asarray(seg, dtype=float).flatten())
+
+                if time_segments:
+                    true_time_full = np.concatenate(time_segments)
+                    true_voltage_full = np.concatenate([
+                        np.asarray(data_result['split_data']['train_original'], dtype=float).flatten(),
+                        np.asarray(data_result['split_data']['val_original'], dtype=float).flatten(),
+                        np.asarray(data_result['split_data']['test_original'], dtype=float).flatten()
+                    ])
+
+                    true_V0_full, _ = calculator.calculate_v_initial(true_voltage_full)
+                    true_soh_full = calculator.calculate_soh(true_voltage_full, true_V0_full)
+                    true_rul_full = calculator.calculate_rul(true_soh_full, true_time_full)
+                    rul_results['true_rul_full'] = true_rul_full
+                    self.logger.log_info(
+                        f"真实RUL(全时间轴): {true_rul_full.get('rul_actual', 'N/A')}h, 方法={true_rul_full.get('method')}" )
+                else:
+                    self.logger.log_warning("全时间轴真实RUL: 时间序列缺失，跳过计算")
+            except Exception as true_full_err:
+                self.logger.log_warning(f"全时间轴真实RUL计算失败: {true_full_err}")
 
             # 跨数据集预测：使用FC1训练好的模型在FC2上推理
             fc2_result = None
@@ -2972,6 +3051,29 @@ class PEMFCTrainer:
                             fc2_full_df.to_csv(fc2_full_path, index=False, encoding='utf-8')
                             self.logger.log_info(f"FC2 全时间轴预测保存: {fc2_full_path}")
 
+                            # 计算FC2预测RUL（基于完整预测曲线外推）
+                            try:
+                                fc2_pred_full = np.asarray(fc2_full_df['prediction'], dtype=float)
+                                fc2_time_full = np.asarray(fc2_full_df['time'], dtype=float)
+                                fc2_pred_V0, _ = calculator.calculate_v_initial(fc2_pred_full)
+                                fc2_pred_soh = calculator.calculate_soh(fc2_pred_full, fc2_pred_V0)
+                                fc2_pred_rul = calculator.calculate_rul(fc2_pred_soh, fc2_time_full)
+                                fc2_result['rul_pred'] = fc2_pred_rul
+                                fc2_result['pred_V_initial_full'] = fc2_pred_V0
+
+                                fc2_rul_path = os.path.join(self.config.save_paths['csv'], 'fc2_rul_prediction.csv')
+                                pd.DataFrame([{
+                                    'dataset': 'FC2',
+                                    'rul_pred': fc2_pred_rul.get('rul_actual'),
+                                    'eol_time': fc2_pred_rul.get('eol_time'),
+                                    'threshold': fc2_pred_rul.get('threshold'),
+                                    'method': fc2_pred_rul.get('method')
+                                }]).to_csv(fc2_rul_path, index=False, encoding='utf-8')
+                                self.logger.log_info(
+                                    f"FC2 预测RUL: {fc2_pred_rul.get('rul_actual')}, EOL={fc2_pred_rul.get('eol_time')} 保存: {fc2_rul_path}")
+                            except Exception as fc2_rul_err:
+                                self.logger.log_warning(f"FC2 预测RUL计算失败: {fc2_rul_err}")
+
                             # 绘制FC2完整时间轴图像（已知+未来预测）
                             try:
                                 plt.rcParams["font.family"] = ["SimHei", "Microsoft YaHei", "sans-serif"]
@@ -3084,6 +3186,14 @@ class PEMFCTrainer:
                 pred_full[pred_start:pred_end] = pred_voltage_aligned[:pred_end - pred_start]
             else:
                 self.logger.log_warning("预测序列无法对齐全量时间轴，跳过全幅预测绘图")
+
+            # 追加未来滚动预测，使全幅图包含未来走势
+            if forecast_df is not None and not forecast_df.empty:
+                future_time_ext = forecast_df['time'].to_numpy()
+                future_pred_ext = forecast_df['prediction'].to_numpy()
+                time_full = np.concatenate([time_full, future_time_ext])
+                true_full = np.concatenate([true_full, np.full_like(future_time_ext, np.nan, dtype=float)])
+                pred_full = np.concatenate([pred_full, future_pred_ext])
 
             # 绘制训练历史
             visualizer.plot_training_history(trainer.history)

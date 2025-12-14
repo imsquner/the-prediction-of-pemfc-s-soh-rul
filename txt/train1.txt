@@ -1,0 +1,492 @@
+D:\pythonfile\PythonProject\.venv\Scripts\python.exe D:\pythonfile\PythonProject\train.py 
+================================================================================
+PEMFC燃料电池GRU寿命预测模型 (论文版本)
+PyTorch版本: 2.7.1+cu118
+================================================================================
+16:39:50 - INFO - ================================================================================
+16:39:50 - INFO - PEMFC燃料电池GRU寿命预测模型（论文版本）
+16:39:50 - INFO - 开始时间: 2025-12-07 16:39:50
+16:39:50 - INFO - ================================================================================
+16:39:50 - INFO - [模型配置参数]
+16:39:50 - INFO -   data_path: processed_results/FC1/
+16:39:50 - INFO -   data_file_pattern: *_processed_*.npz
+16:39:50 - INFO -   data_file_suffix: _processed
+16:39:50 - INFO -   target_feature: stack_voltage
+16:39:50 - INFO -   sequence_length: 50
+16:39:50 - INFO -   selected_features: [7 个元素] hydrogen_inlet_temp, air_outlet_flow, current, coolant_flow, current_density...
+16:39:50 - INFO -   missing_value_method: linear
+16:39:50 - INFO -   outlier_method: 3sigma
+16:39:50 - INFO -   outlier_sigma: 3.0
+16:39:50 - INFO -   wavelet_method: sym8
+16:39:50 - INFO -   wavelet_level: 6
+16:39:50 - INFO -   wavelet_threshold_percentile: 90
+16:39:50 - INFO -   train_ratio: 0.7
+16:39:50 - INFO -   val_ratio: 0.15
+16:39:50 - INFO -   test_ratio: 0.15
+16:39:50 - INFO -   gru_hidden_size: 64
+16:39:50 - INFO -   gru_num_layers: 2
+16:39:50 - INFO -   dropout_rate: 0.3
+16:39:50 - INFO -   bidirectional: True
+16:39:50 - INFO -   fc_hidden_sizes: [2 个元素] 32, 16
+16:39:50 - INFO -   batch_size: 32
+16:39:50 - INFO -   epochs: 200
+16:39:50 - INFO -   learning_rate: 0.001
+16:39:50 - INFO -   weight_decay: 0.0001
+16:39:50 - INFO -   patience: 20
+16:39:50 - INFO -   lr_decay_factor: 0.7
+16:39:50 - INFO -   lr_patience: 10
+16:39:50 - INFO -   grad_clip: 1.0
+16:39:50 - INFO -   soh_threshold: 0.96
+16:39:50 - INFO -   v_initial_window: 100
+16:39:50 - INFO -   cv_threshold: 0.01
+16:39:50 - INFO -   denoising_method: wavelet
+16:39:50 - INFO -   device: cuda
+16:39:50 - INFO -   save_dir: train_results_paper
+16:39:50 - INFO -   experiment_name: gru_pemfc_paper_experiment_fixed
+16:39:50 - INFO - ================================================================================
+16:39:50 - INFO - ================================================================================
+16:39:50 - INFO - PEMFC燃料电池GRU寿命预测训练
+16:39:50 - INFO - ================================================================================
+16:39:50 - INFO - 开始数据准备...
+16:39:50 - INFO - 步骤1: 加载数据并使用预定义特征
+16:39:50 - INFO - 在目录中搜索最新数据文件: processed_results/FC1/
+16:39:50 - INFO - 在目录中找到 1 个.npz文件
+16:39:50 - INFO - 找到 1 个匹配模式的文件
+16:39:50 - INFO - 按时间戳选择最新文件: FC1_processed_20251207_163828.npz
+16:39:50 - INFO - 使用数据文件: processed_results/FC1/FC1_processed_20251207_163828.npz
+16:39:50 - INFO - 使用数据文件: processed_results/FC1/FC1_processed_20251207_163828.npz
+16:39:50 - INFO - NPZ文件中的所有特征: ['time', 'stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+16:39:50 - INFO - 数据长度: 143862
+16:39:50 - INFO - 原始数据加载: 143862 行, 20 列
+16:39:50 - INFO - 选定的特征（排除目标和时间）: ['hydrogen_inlet_temp', 'air_outlet_flow', 'current', 'coolant_flow', 'current_density', 'air_outlet_pressure', 'coolant_inlet_temp']
+16:39:50 - INFO - 选定数据形状: (143862, 9)
+16:39:50 - INFO - 检查数据完整性...
+16:39:50 - INFO - 加载后的数据列: ['hydrogen_inlet_temp', 'air_outlet_flow', 'current', 'coolant_flow', 'current_density', 'air_outlet_pressure', 'coolant_inlet_temp', 'stack_voltage', 'time']
+16:39:50 - INFO - 数据类型: {'hydrogen_inlet_temp': dtype('float64'), 'air_outlet_flow': dtype('float64'), 'current': dtype('float64'), 'coolant_flow': dtype('float64'), 'current_density': dtype('float64'), 'air_outlet_pressure': dtype('float64'), 'coolant_inlet_temp': dtype('float64'), 'stack_voltage': dtype('float64'), 'time': dtype('float64')}
+16:39:50 - INFO - 步骤2: 应用小波阈值去噪
+16:39:50 - INFO - 去噪前数据列: ['hydrogen_inlet_temp', 'air_outlet_flow', 'current', 'coolant_flow', 'current_density', 'air_outlet_pressure', 'coolant_inlet_temp', 'stack_voltage', 'time']
+16:39:50 - INFO - 需要去噪的数值列: ['hydrogen_inlet_temp', 'air_outlet_flow', 'current', 'coolant_flow', 'current_density', 'air_outlet_pressure', 'coolant_inlet_temp', 'stack_voltage', 'time']
+16:39:50 - INFO - stack_voltage 的去噪指标: SNR=124.64dB, RMSE=0.000002, 平滑度=0.9947
+16:39:50 - INFO - ✓ 小波去噪 完成
+16:39:50 - INFO - 步骤4: 按时间顺序划分数据
+16:39:50 - INFO - 划分前的数据列: ['hydrogen_inlet_temp', 'air_outlet_flow', 'current', 'coolant_flow', 'current_density', 'air_outlet_pressure', 'coolant_inlet_temp', 'stack_voltage', 'time']
+16:39:50 - INFO - 数据按时间排序。时间范围: 0.0h 到 1154.2h
+16:39:50 - INFO - 训练集: 100703 个样本 (0.0h - 792.2h)
+16:39:50 - INFO - 验证集: 21579 个样本 (792.2h - 973.2h)
+16:39:50 - INFO - 测试集: 21580 个样本 (973.2h - 1154.2h)
+16:39:50 - INFO - 步骤5: 标准化特征
+16:39:50 - INFO - 步骤3: 创建序列，窗口大小 50
+16:39:51 - INFO - 创建了 100653 个序列
+16:39:51 - INFO - 步骤3: 创建序列，窗口大小 50
+16:39:51 - INFO - 创建了 21529 个序列
+16:39:51 - INFO - 步骤3: 创建序列，窗口大小 50
+16:39:51 - INFO - 创建了 21530 个序列
+16:39:51 - INFO - ✓ 数据划分和预处理 完成
+16:39:51 - INFO - DataLoader创建完成: 训练集=3146批次, 验证集=673批次, 测试集=673批次
+16:39:51 - INFO - ✓ 数据准备 完成
+16:39:51 - INFO - 构建GRU模型，输入维度: 7
+16:39:51 - INFO - 模型参数: 总计=107,218, 可训练=107,218
+16:39:55 - INFO - 开始模型训练...
+16:39:55 - INFO - 设备: cuda
+16:40:12 - INFO - Epoch 001/200 | 训练损失: -0.242953, 验证损失: 9.774738 | 学习率: 0.001000
+16:40:12 - INFO -   训练指标: MAE: 0.1650, RMSE: 0.2401, MAPE: 61.2941, R2: 0.9424
+16:40:12 - INFO -   验证指标: MAE: 0.4186, RMSE: 0.5111, MAPE: 20.4413, R2: -2.0460
+16:40:12 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:40:12 - INFO - ✓ 最佳模型已保存 (epoch 1, 验证损失: 9.774738)
+16:40:26 - INFO - Epoch 002/200 | 训练损失: 1.153130, 验证损失: 21.492495 | 学习率: 0.001000
+16:40:26 - INFO -   训练指标: MAE: 0.3243, RMSE: 0.6123, MAPE: 83.7007, R2: 0.6251
+16:40:26 - INFO -   验证指标: MAE: 0.5162, RMSE: 0.5949, MAPE: 25.7459, R2: -3.1262
+16:40:37 - INFO - Epoch 003/200 | 训练损失: 3.881572, 验证损失: 15.206365 | 学习率: 0.001000
+16:40:37 - INFO -   训练指标: MAE: 0.3395, RMSE: 0.6028, MAPE: 81.6806, R2: 0.6367
+16:40:37 - INFO -   验证指标: MAE: 0.5365, RMSE: 0.6136, MAPE: 26.8368, R2: -3.3890
+16:40:48 - INFO - Epoch 004/200 | 训练损失: 31.351006, 验证损失: 19.250154 | 学习率: 0.001000
+16:40:48 - INFO -   训练指标: MAE: 0.2815, RMSE: 0.4844, MAPE: 42.4112, R2: 0.7653
+16:40:48 - INFO -   验证指标: MAE: 0.5831, RMSE: 0.6526, MAPE: 29.4200, R2: -3.9660
+16:41:00 - INFO - Epoch 005/200 | 训练损失: 5.146362, 验证损失: 10.122410 | 学习率: 0.001000
+16:41:00 - INFO -   训练指标: MAE: 0.3592, RMSE: 0.6512, MAPE: 56.1099, R2: 0.5760
+16:41:00 - INFO -   验证指标: MAE: 0.6586, RMSE: 0.7204, MAPE: 33.5548, R2: -5.0508
+16:41:12 - INFO - Epoch 006/200 | 训练损失: 2.840649, 验证损失: 13.386116 | 学习率: 0.001000
+16:41:12 - INFO -   训练指标: MAE: 0.3340, RMSE: 0.5969, MAPE: 62.0638, R2: 0.6438
+16:41:12 - INFO -   验证指标: MAE: 0.5701, RMSE: 0.6407, MAPE: 28.7213, R2: -3.7865
+16:41:24 - INFO - Epoch 007/200 | 训练损失: 3.558894, 验证损失: 11.709450 | 学习率: 0.001000
+16:41:24 - INFO -   训练指标: MAE: 0.3375, RMSE: 0.6038, MAPE: 56.9123, R2: 0.6355
+16:41:24 - INFO -   验证指标: MAE: 0.6049, RMSE: 0.6739, MAPE: 30.5793, R2: -4.2940
+16:41:36 - INFO - Epoch 008/200 | 训练损失: 0.651586, 验证损失: 16.344048 | 学习率: 0.001000
+16:41:36 - INFO -   训练指标: MAE: 0.3661, RMSE: 0.6366, MAPE: 63.7331, R2: 0.5948
+16:41:36 - INFO -   验证指标: MAE: 0.5762, RMSE: 0.6467, MAPE: 29.0440, R2: -3.8761
+16:41:48 - INFO - Epoch 009/200 | 训练损失: 4.906433, 验证损失: 12.812654 | 学习率: 0.001000
+16:41:48 - INFO -   训练指标: MAE: 0.5417, RMSE: 0.8438, MAPE: 97.7617, R2: 0.2881
+16:41:48 - INFO -   验证指标: MAE: 0.7791, RMSE: 0.8324, MAPE: 40.1273, R2: -7.0777
+16:41:59 - INFO - Epoch 010/200 | 训练损失: 1.222440, 验证损失: 7.177707 | 学习率: 0.001000
+16:41:59 - INFO -   训练指标: MAE: 0.4938, RMSE: 0.7419, MAPE: 166.1537, R2: 0.4497
+16:41:59 - INFO -   验证指标: MAE: 1.2003, RMSE: 1.2348, MAPE: 63.1614, R2: -16.7768
+16:41:59 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:41:59 - INFO - ✓ 最佳模型已保存 (epoch 10, 验证损失: 7.177707)
+16:42:12 - INFO - Epoch 011/200 | 训练损失: 0.800602, 验证损失: 11.242318 | 学习率: 0.001000
+16:42:12 - INFO -   训练指标: MAE: 0.3999, RMSE: 0.6095, MAPE: 142.6889, R2: 0.6286
+16:42:12 - INFO -   验证指标: MAE: 0.9101, RMSE: 0.9566, MAPE: 47.2675, R2: -9.6694
+16:42:24 - INFO - Epoch 012/200 | 训练损失: 5.179918, 验证损失: 61.280778 | 学习率: 0.001000
+16:42:24 - INFO -   训练指标: MAE: 0.3847, RMSE: 0.6348, MAPE: 141.2067, R2: 0.5971
+16:42:24 - INFO -   验证指标: MAE: 0.8721, RMSE: 0.9202, MAPE: 45.2043, R2: -8.8718
+16:42:36 - INFO - Epoch 013/200 | 训练损失: 8.959399, 验证损失: 78.574938 | 学习率: 0.001000
+16:42:36 - INFO -   训练指标: MAE: 0.2894, RMSE: 0.4979, MAPE: 72.0138, R2: 0.7521
+16:42:36 - INFO -   验证指标: MAE: 0.6996, RMSE: 0.7581, MAPE: 35.7939, R2: -5.6998
+16:42:48 - INFO - Epoch 014/200 | 训练损失: 26.313685, 验证损失: 9.435743 | 学习率: 0.001000
+16:42:48 - INFO -   训练指标: MAE: 0.3696, RMSE: 0.6078, MAPE: 78.1368, R2: 0.6307
+16:42:48 - INFO -   验证指标: MAE: 0.7119, RMSE: 0.7706, MAPE: 36.4447, R2: -5.9241
+16:43:02 - INFO - Epoch 015/200 | 训练损失: 4.483139, 验证损失: 144.444746 | 学习率: 0.001000
+16:43:02 - INFO -   训练指标: MAE: 0.3162, RMSE: 0.5640, MAPE: 61.6490, R2: 0.6819
+16:43:02 - INFO -   验证指标: MAE: 0.6944, RMSE: 0.7535, MAPE: 35.5070, R2: -5.6199
+16:43:14 - INFO - Epoch 016/200 | 训练损失: 34.180378, 验证损失: 3.749940 | 学习率: 0.001000
+16:43:14 - INFO -   训练指标: MAE: 0.3767, RMSE: 0.5821, MAPE: 120.8203, R2: 0.6613
+16:43:14 - INFO -   验证指标: MAE: 0.4254, RMSE: 0.5156, MAPE: 20.8333, R2: -2.0993
+16:43:14 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:43:14 - INFO - ✓ 最佳模型已保存 (epoch 16, 验证损失: 3.749940)
+16:43:28 - INFO - Epoch 017/200 | 训练损失: 13.302283, 验证损失: 2.254130 | 学习率: 0.001000
+16:43:28 - INFO -   训练指标: MAE: 0.9735, RMSE: 1.4465, MAPE: 196.0795, R2: -1.0922
+16:43:28 - INFO -   验证指标: MAE: 0.4230, RMSE: 0.5136, MAPE: 20.7033, R2: -2.0749
+16:43:28 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:43:28 - INFO - ✓ 最佳模型已保存 (epoch 17, 验证损失: 2.254130)
+16:43:41 - INFO - Epoch 018/200 | 训练损失: 9.672241, 验证损失: 2.139875 | 学习率: 0.001000
+16:43:41 - INFO -   训练指标: MAE: 0.9624, RMSE: 1.4346, MAPE: 178.3970, R2: -1.0578
+16:43:41 - INFO -   验证指标: MAE: 0.4241, RMSE: 0.5144, MAPE: 20.7597, R2: -2.0855
+16:43:41 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:43:41 - INFO - ✓ 最佳模型已保存 (epoch 18, 验证损失: 2.139875)
+16:43:53 - INFO - Epoch 019/200 | 训练损失: 9.234242, 验证损失: 2.119187 | 学习率: 0.001000
+16:43:53 - INFO -   训练指标: MAE: 0.9605, RMSE: 1.4323, MAPE: 175.9082, R2: -1.0511
+16:43:53 - INFO -   验证指标: MAE: 0.4244, RMSE: 0.5147, MAPE: 20.7755, R2: -2.0884
+16:43:53 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:43:53 - INFO - ✓ 最佳模型已保存 (epoch 19, 验证损失: 2.119187)
+16:44:06 - INFO - Epoch 020/200 | 训练损失: 9.149663, 验证损失: 2.110580 | 学习率: 0.001000
+16:44:06 - INFO -   训练指标: MAE: 0.9603, RMSE: 1.4319, MAPE: 175.5029, R2: -1.0500
+16:44:06 - INFO -   验证指标: MAE: 0.4244, RMSE: 0.5147, MAPE: 20.7790, R2: -2.0891
+16:44:06 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:44:06 - INFO - ✓ 最佳模型已保存 (epoch 20, 验证损失: 2.110580)
+16:44:20 - INFO - Epoch 021/200 | 训练损失: 9.109323, 验证损失: 2.112814 | 学习率: 0.001000
+16:44:20 - INFO -   训练指标: MAE: 0.9599, RMSE: 1.4315, MAPE: 175.1758, R2: -1.0490
+16:44:20 - INFO -   验证指标: MAE: 0.4244, RMSE: 0.5147, MAPE: 20.7785, R2: -2.0890
+16:44:31 - INFO - Epoch 022/200 | 训练损失: 9.120343, 验证损失: 2.113280 | 学习率: 0.001000
+16:44:31 - INFO -   训练指标: MAE: 0.9600, RMSE: 1.4316, MAPE: 175.2577, R2: -1.0492
+16:44:31 - INFO -   验证指标: MAE: 0.4244, RMSE: 0.5147, MAPE: 20.7790, R2: -2.0891
+16:44:43 - INFO - Epoch 023/200 | 训练损失: 9.121764, 验证损失: 2.113341 | 学习率: 0.001000
+16:44:43 - INFO -   训练指标: MAE: 0.9600, RMSE: 1.4316, MAPE: 175.2701, R2: -1.0493
+16:44:43 - INFO -   验证指标: MAE: 0.4244, RMSE: 0.5147, MAPE: 20.7789, R2: -2.0891
+16:44:54 - INFO - Epoch 024/200 | 训练损失: 9.122023, 验证损失: 2.113352 | 学习率: 0.001000
+16:44:54 - INFO -   训练指标: MAE: 0.9600, RMSE: 1.4316, MAPE: 175.2719, R2: -1.0493
+16:44:54 - INFO -   验证指标: MAE: 0.4244, RMSE: 0.5147, MAPE: 20.7789, R2: -2.0891
+16:45:05 - INFO - Epoch 025/200 | 训练损失: 9.122073, 验证损失: 2.113354 | 学习率: 0.001000
+16:45:05 - INFO -   训练指标: MAE: 0.9600, RMSE: 1.4316, MAPE: 175.2722, R2: -1.0493
+16:45:05 - INFO -   验证指标: MAE: 0.4244, RMSE: 0.5147, MAPE: 20.7789, R2: -2.0891
+16:45:17 - INFO - Epoch 026/200 | 训练损失: 9.122089, 验证损失: 2.113354 | 学习率: 0.001000
+16:45:17 - INFO -   训练指标: MAE: 0.9600, RMSE: 1.4316, MAPE: 175.2723, R2: -1.0493
+16:45:17 - INFO -   验证指标: MAE: 0.4244, RMSE: 0.5147, MAPE: 20.7789, R2: -2.0891
+16:45:28 - INFO - Epoch 027/200 | 训练损失: 9.122089, 验证损失: 2.113354 | 学习率: 0.001000
+16:45:28 - INFO -   训练指标: MAE: 0.9600, RMSE: 1.4316, MAPE: 175.2723, R2: -1.0493
+16:45:28 - INFO -   验证指标: MAE: 0.4244, RMSE: 0.5147, MAPE: 20.7789, R2: -2.0891
+16:45:40 - INFO - Epoch 028/200 | 训练损失: 9.122089, 验证损失: 2.113354 | 学习率: 0.001000
+16:45:40 - INFO -   训练指标: MAE: 0.9600, RMSE: 1.4316, MAPE: 175.2723, R2: -1.0493
+16:45:40 - INFO -   验证指标: MAE: 0.4244, RMSE: 0.5147, MAPE: 20.7789, R2: -2.0891
+16:45:51 - INFO - Epoch 029/200 | 训练损失: 9.122089, 验证损失: 2.113354 | 学习率: 0.001000
+16:45:51 - INFO -   训练指标: MAE: 0.9600, RMSE: 1.4316, MAPE: 175.2723, R2: -1.0493
+16:45:51 - INFO -   验证指标: MAE: 0.4244, RMSE: 0.5147, MAPE: 20.7789, R2: -2.0891
+16:46:03 - INFO - Epoch 030/200 | 训练损失: 9.122089, 验证损失: 2.113354 | 学习率: 0.001000
+16:46:03 - INFO -   训练指标: MAE: 0.9600, RMSE: 1.4316, MAPE: 175.2723, R2: -1.0493
+16:46:03 - INFO -   验证指标: MAE: 0.4244, RMSE: 0.5147, MAPE: 20.7789, R2: -2.0891
+16:46:14 - INFO - Epoch 031/200 | 训练损失: 9.122089, 验证损失: 2.113354 | 学习率: 0.000700
+16:46:14 - INFO -   训练指标: MAE: 0.9600, RMSE: 1.4316, MAPE: 175.2723, R2: -1.0493
+16:46:14 - INFO -   验证指标: MAE: 0.4244, RMSE: 0.5147, MAPE: 20.7789, R2: -2.0891
+16:46:26 - INFO - Epoch 032/200 | 训练损失: 11.821841, 验证损失: 2.132899 | 学习率: 0.000700
+16:46:26 - INFO -   训练指标: MAE: 1.0725, RMSE: 1.5102, MAPE: 317.9958, R2: -1.2802
+16:46:26 - INFO -   验证指标: MAE: 0.6061, RMSE: 0.6731, MAPE: 30.6810, R2: -4.2828
+16:46:38 - INFO - Epoch 033/200 | 训练损失: 5.583024, 验证损失: 1.895034 | 学习率: 0.000700
+16:46:38 - INFO -   训练指标: MAE: 0.9736, RMSE: 1.3822, MAPE: 230.1510, R2: -0.9101
+16:46:38 - INFO -   验证指标: MAE: 0.6322, RMSE: 0.6968, MAPE: 32.1086, R2: -4.6602
+16:46:38 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:46:38 - INFO - ✓ 最佳模型已保存 (epoch 33, 验证损失: 1.895034)
+16:46:51 - INFO - Epoch 034/200 | 训练损失: 4.487654, 验证损失: 1.803564 | 学习率: 0.000700
+16:46:51 - INFO -   训练指标: MAE: 0.9601, RMSE: 1.3620, MAPE: 215.8373, R2: -0.8547
+16:46:51 - INFO -   验证指标: MAE: 0.6400, RMSE: 0.7038, MAPE: 32.5335, R2: -4.7756
+16:46:51 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:46:51 - INFO - ✓ 最佳模型已保存 (epoch 34, 验证损失: 1.803564)
+16:47:04 - INFO - Epoch 035/200 | 训练损失: 4.146572, 验证损失: 1.773113 | 学习率: 0.000700
+16:47:04 - INFO -   训练指标: MAE: 0.9555, RMSE: 1.3550, MAPE: 210.5960, R2: -0.8358
+16:47:04 - INFO -   验证指标: MAE: 0.6429, RMSE: 0.7065, MAPE: 32.6905, R2: -4.8186
+16:47:04 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:47:04 - INFO - ✓ 最佳模型已保存 (epoch 35, 验证损失: 1.773113)
+16:47:18 - INFO - Epoch 036/200 | 训练损失: 4.031547, 验证损失: 1.762929 | 学习率: 0.000700
+16:47:18 - INFO -   训练指标: MAE: 0.9539, RMSE: 1.3525, MAPE: 208.6691, R2: -0.8289
+16:47:18 - INFO -   验证指标: MAE: 0.6440, RMSE: 0.7075, MAPE: 32.7501, R2: -4.8350
+16:47:18 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:47:18 - INFO - ✓ 最佳模型已保存 (epoch 36, 验证损失: 1.762929)
+16:47:32 - INFO - Epoch 037/200 | 训练损失: 3.991457, 验证损失: 1.759435 | 学习率: 0.000700
+16:47:32 - INFO -   训练指标: MAE: 0.9532, RMSE: 1.3515, MAPE: 207.9720, R2: -0.8263
+16:47:32 - INFO -   验证指标: MAE: 0.6444, RMSE: 0.7078, MAPE: 32.7721, R2: -4.8410
+16:47:32 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:47:32 - INFO - ✓ 最佳模型已保存 (epoch 37, 验证损失: 1.759435)
+16:47:45 - INFO - Epoch 038/200 | 训练损失: 3.977322, 验证损失: 1.758212 | 学习率: 0.000700
+16:47:45 - INFO -   训练指标: MAE: 0.9530, RMSE: 1.3512, MAPE: 207.7234, R2: -0.8253
+16:47:45 - INFO -   验证指标: MAE: 0.6445, RMSE: 0.7079, MAPE: 32.7801, R2: -4.8432
+16:47:45 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:47:45 - INFO - ✓ 最佳模型已保存 (epoch 38, 验证损失: 1.758212)
+16:47:57 - INFO - Epoch 039/200 | 训练损失: 3.972293, 验证损失: 1.757782 | 学习率: 0.000700
+16:47:57 - INFO -   训练指标: MAE: 0.9529, RMSE: 1.3510, MAPE: 207.6334, R2: -0.8250
+16:47:57 - INFO -   验证指标: MAE: 0.6446, RMSE: 0.7080, MAPE: 32.7829, R2: -4.8440
+16:47:57 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:47:57 - INFO - ✓ 最佳模型已保存 (epoch 39, 验证损失: 1.757782)
+16:48:10 - INFO - Epoch 040/200 | 训练损失: 3.970516, 验证损失: 1.757628 | 学习率: 0.000700
+16:48:10 - INFO -   训练指标: MAE: 0.9529, RMSE: 1.3510, MAPE: 207.6022, R2: -0.8249
+16:48:10 - INFO -   验证指标: MAE: 0.6446, RMSE: 0.7080, MAPE: 32.7839, R2: -4.8443
+16:48:10 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:48:10 - INFO - ✓ 最佳模型已保存 (epoch 40, 验证损失: 1.757628)
+16:48:23 - INFO - Epoch 041/200 | 训练损失: 3.969877, 验证损失: 1.757574 | 学习率: 0.000700
+16:48:23 - INFO -   训练指标: MAE: 0.9529, RMSE: 1.3510, MAPE: 207.5910, R2: -0.8248
+16:48:23 - INFO -   验证指标: MAE: 0.6446, RMSE: 0.7080, MAPE: 32.7843, R2: -4.8444
+16:48:23 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:48:23 - INFO - ✓ 最佳模型已保存 (epoch 41, 验证损失: 1.757574)
+16:48:36 - INFO - Epoch 042/200 | 训练损失: 3.969651, 验证损失: 1.757554 | 学习率: 0.000700
+16:48:36 - INFO -   训练指标: MAE: 0.9529, RMSE: 1.3510, MAPE: 207.5867, R2: -0.8248
+16:48:36 - INFO -   验证指标: MAE: 0.6446, RMSE: 0.7080, MAPE: 32.7844, R2: -4.8444
+16:48:36 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:48:36 - INFO - ✓ 最佳模型已保存 (epoch 42, 验证损失: 1.757554)
+16:48:48 - INFO - Epoch 043/200 | 训练损失: 3.969573, 验证损失: 1.757547 | 学习率: 0.000700
+16:48:48 - INFO -   训练指标: MAE: 0.9529, RMSE: 1.3510, MAPE: 207.5856, R2: -0.8248
+16:48:48 - INFO -   验证指标: MAE: 0.6446, RMSE: 0.7080, MAPE: 32.7845, R2: -4.8444
+16:48:48 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:48:48 - INFO - ✓ 最佳模型已保存 (epoch 43, 验证损失: 1.757547)
+16:49:03 - INFO - Epoch 044/200 | 训练损失: 3.969541, 验证损失: 1.757549 | 学习率: 0.000700
+16:49:03 - INFO -   训练指标: MAE: 0.9529, RMSE: 1.3510, MAPE: 207.5848, R2: -0.8248
+16:49:03 - INFO -   验证指标: MAE: 0.6446, RMSE: 0.7080, MAPE: 32.7845, R2: -4.8444
+16:49:15 - INFO - Epoch 045/200 | 训练损失: 3.969550, 验证损失: 1.757545 | 学习率: 0.000700
+16:49:15 - INFO -   训练指标: MAE: 0.9529, RMSE: 1.3510, MAPE: 207.5852, R2: -0.8248
+16:49:15 - INFO -   验证指标: MAE: 0.6446, RMSE: 0.7080, MAPE: 32.7845, R2: -4.8444
+16:49:15 - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed\models\best_model.pth (输入维度: 7)
+16:49:15 - INFO - ✓ 最佳模型已保存 (epoch 45, 验证损失: 1.757545)
+16:49:28 - INFO - Epoch 046/200 | 训练损失: 3.933666, 验证损失: 23.008135 | 学习率: 0.000700
+16:49:28 - INFO -   训练指标: MAE: 0.9372, RMSE: 1.3609, MAPE: 205.3233, R2: -0.8518
+16:49:28 - INFO -   验证指标: MAE: 0.6754, RMSE: 0.7361, MAPE: 34.4629, R2: -5.3178
+16:49:40 - INFO - Epoch 047/200 | 训练损失: 1.927523, 验证损失: 24.626342 | 学习率: 0.000700
+16:49:40 - INFO -   训练指标: MAE: 0.6062, RMSE: 0.8755, MAPE: 124.8832, R2: 0.2336
+16:49:40 - INFO -   验证指标: MAE: 0.8106, RMSE: 0.8665, MAPE: 41.8035, R2: -7.7526
+16:49:51 - INFO - Epoch 048/200 | 训练损失: 1.158792, 验证损失: 23.084201 | 学习率: 0.000700
+16:49:51 - INFO -   训练指标: MAE: 0.5433, RMSE: 0.7748, MAPE: 180.4624, R2: 0.3997
+16:49:51 - INFO -   验证指标: MAE: 0.8795, RMSE: 0.9309, MAPE: 45.5636, R2: -9.1027
+16:50:03 - INFO - Epoch 049/200 | 训练损失: 3.320180, 验证损失: 71.820464 | 学习率: 0.000700
+16:50:03 - INFO -   训练指标: MAE: 0.4384, RMSE: 0.6601, MAPE: 170.1630, R2: 0.5643
+16:50:03 - INFO -   验证指标: MAE: 0.8810, RMSE: 0.9284, MAPE: 45.6938, R2: -9.0484
+16:50:14 - INFO - Epoch 050/200 | 训练损失: 22.478640, 验证损失: 36.221910 | 学习率: 0.000700
+16:50:14 - INFO -   训练指标: MAE: 0.3321, RMSE: 0.5632, MAPE: 100.9126, R2: 0.6829
+16:50:14 - INFO -   验证指标: MAE: 0.7875, RMSE: 0.8400, MAPE: 40.5930, R2: -7.2262
+16:50:26 - INFO - Epoch 051/200 | 训练损失: 7.503583, 验证损失: 6.999693 | 学习率: 0.000700
+16:50:26 - INFO -   训练指标: MAE: 0.3818, RMSE: 0.6100, MAPE: 94.4883, R2: 0.6280
+16:50:26 - INFO -   验证指标: MAE: 0.7822, RMSE: 0.8336, MAPE: 40.3492, R2: -7.1020
+16:50:38 - INFO - Epoch 052/200 | 训练损失: 2.825554, 验证损失: 9.516259 | 学习率: 0.000490
+16:50:38 - INFO -   训练指标: MAE: 0.4255, RMSE: 0.6930, MAPE: 107.9234, R2: 0.5198
+16:50:38 - INFO -   验证指标: MAE: 0.7880, RMSE: 0.8407, MAPE: 40.6138, R2: -7.2398
+16:50:50 - INFO - Epoch 053/200 | 训练损失: 3.300975, 验证损失: 20.022673 | 学习率: 0.000490
+16:50:50 - INFO -   训练指标: MAE: 0.5615, RMSE: 0.8378, MAPE: 122.9638, R2: 0.2982
+16:50:50 - INFO -   验证指标: MAE: 0.8858, RMSE: 0.9321, MAPE: 45.9820, R2: -9.1285
+16:51:03 - INFO - Epoch 054/200 | 训练损失: 8.947620, 验证损失: 28.023946 | 学习率: 0.000490
+16:51:03 - INFO -   训练指标: MAE: 0.5129, RMSE: 0.7900, MAPE: 140.7322, R2: 0.3760
+16:51:03 - INFO -   验证指标: MAE: 0.9414, RMSE: 0.9856, MAPE: 48.9958, R2: -10.3254
+16:51:15 - INFO - Epoch 055/200 | 训练损失: 65.242134, 验证损失: 67.143795 | 学习率: 0.000490
+16:51:15 - INFO -   训练指标: MAE: 0.5387, RMSE: 0.6885, MAPE: 266.9025, R2: 0.5260
+16:51:15 - INFO -   验证指标: MAE: 0.8410, RMSE: 0.8909, MAPE: 43.5028, R2: -8.2543
+16:51:28 - INFO - Epoch 056/200 | 训练损失: 5.154905, 验证损失: 2.784204 | 学习率: 0.000490
+16:51:28 - INFO -   训练指标: MAE: 0.6889, RMSE: 0.8278, MAPE: 211.5461, R2: 0.3148
+16:51:28 - INFO -   验证指标: MAE: 1.5232, RMSE: 1.5511, MAPE: 80.7686, R2: -27.0499
+16:51:40 - INFO - Epoch 057/200 | 训练损失: 2.497881, 验证损失: 23.823093 | 学习率: 0.000490
+16:51:40 - INFO -   训练指标: MAE: 0.7840, RMSE: 0.9816, MAPE: 130.4881, R2: 0.0366
+16:51:40 - INFO -   验证指标: MAE: 1.0890, RMSE: 1.1313, MAPE: 58.5441, R2: -13.9221
+16:51:53 - INFO - Epoch 058/200 | 训练损失: 4.934827, 验证损失: 21.187974 | 学习率: 0.000490
+16:51:53 - INFO -   训练指标: MAE: 0.8138, RMSE: 1.0291, MAPE: 98.0877, R2: -0.0588
+16:51:53 - INFO -   验证指标: MAE: 1.0258, RMSE: 1.0630, MAPE: 54.8373, R2: -12.1749
+16:52:09 - INFO - Epoch 059/200 | 训练损失: 4.236415, 验证损失: 23.403928 | 学习率: 0.000490
+16:52:09 - INFO -   训练指标: MAE: 0.8378, RMSE: 1.0662, MAPE: 103.5729, R2: -0.1366
+16:52:09 - INFO -   验证指标: MAE: 0.9806, RMSE: 1.0174, MAPE: 52.2144, R2: -11.0678
+16:52:22 - INFO - Epoch 060/200 | 训练损失: 4.111151, 验证损失: 27.706634 | 学习率: 0.000490
+16:52:22 - INFO -   训练指标: MAE: 0.7941, RMSE: 1.0788, MAPE: 114.8756, R2: -0.1635
+16:52:22 - INFO -   验证指标: MAE: 0.6482, RMSE: 0.7073, MAPE: 33.0887, R2: -4.8330
+16:52:38 - INFO - Epoch 061/200 | 训练损失: 7.628113, 验证损失: 68.259209 | 学习率: 0.000490
+16:52:38 - INFO -   训练指标: MAE: 0.7193, RMSE: 0.9629, MAPE: 136.0567, R2: 0.0730
+16:52:38 - INFO -   验证指标: MAE: 0.6899, RMSE: 0.7519, MAPE: 35.2696, R2: -5.5918
+16:52:51 - INFO - Epoch 062/200 | 训练损失: 11.122152, 验证损失: 116.204360 | 学习率: 0.000490
+16:52:51 - INFO -   训练指标: MAE: 0.6291, RMSE: 0.8962, MAPE: 138.2445, R2: 0.1969
+16:52:51 - INFO -   验证指标: MAE: 0.8346, RMSE: 0.8875, MAPE: 43.0808, R2: -8.1823
+16:53:03 - INFO - Epoch 063/200 | 训练损失: 17.949529, 验证损失: 95.198610 | 学习率: 0.000343
+16:53:03 - INFO -   训练指标: MAE: 0.5734, RMSE: 0.8424, MAPE: 122.7955, R2: 0.2905
+16:53:03 - INFO -   验证指标: MAE: 0.9369, RMSE: 0.9822, MAPE: 48.7313, R2: -10.2481
+16:53:16 - INFO - Epoch 064/200 | 训练损失: 33.653970, 验证损失: 35.116410 | 学习率: 0.000343
+16:53:16 - INFO -   训练指标: MAE: 0.5794, RMSE: 0.8364, MAPE: 174.1293, R2: 0.3006
+16:53:16 - INFO -   验证指标: MAE: 0.9587, RMSE: 1.0022, MAPE: 49.9528, R2: -10.7104
+16:53:28 - INFO - Epoch 065/200 | 训练损失: 1.736846, 验证损失: 17.465068 | 学习率: 0.000343
+16:53:28 - INFO -   训练指标: MAE: 0.5773, RMSE: 0.8338, MAPE: 163.3481, R2: 0.3049
+16:53:28 - INFO -   验证指标: MAE: 0.9764, RMSE: 1.0187, MAPE: 50.9727, R2: -11.0979
+16:53:28 - INFO - 早停触发，连续 20 个epoch没有改善
+16:53:28 - INFO - 训练完成，耗时 818.14 秒
+16:53:28 - INFO - 最佳模型在 epoch 45，验证损失 1.757545
+16:53:28 - INFO - ✓ 从 epoch 45 加载最佳模型
+16:53:28 - INFO - 在测试集上评估模型...
+16:53:29 - INFO - 预测结果保存到: train_results_paper\gru_pemfc_paper_experiment_fixed\csv_files\predictions.csv
+16:53:29 - INFO - 计算SOH和RUL...
+16:53:29 - INFO - 预测结果形状: (21530,)
+16:53:29 - INFO - predictions flattened形状: (21530,)
+16:53:29 - INFO - pred_voltage_full形状: (21580,)
+16:53:29 - INFO - start_idx: 49, pred_len: 21530
+16:53:29 - INFO - 比较真实和预测的RUL
+16:53:29 - INFO - 基于论文方法计算V_initial
+D:\pythonfile\PythonProject\.venv\Lib\site-packages\pywt\_multilevel.py:43: UserWarning:
+
+Level value of 4 is too high: all coefficients will experience boundary effects.
+
+16:53:29 - INFO - 计算出的V_initial: 3.2161V (CV=0.0000, 窗口=100)
+16:53:29 - INFO - 使用线性插值计算RUL
+16:53:29 - INFO - SOH序列形状: (21580,), 时间序列形状: (21580,)
+16:53:29 - INFO - 处理后形状 - SOH: (21580,), 时间: (21580,)
+16:53:29 - INFO - 所有SOH值都高于阈值，电池尚未显著退化
+16:53:29 - INFO - 外推的RUL: 961.16h (斜率=-0.000041)
+16:53:29 - INFO - 基于论文方法计算V_initial
+16:53:29 - WARNING - 警告: 初始电压不稳定 (CV=0.9754 > 0.01)，扩大窗口
+16:53:29 - INFO - 计算出的V_initial: 2.4504V (CV=0.5694, 窗口=200)
+16:53:29 - INFO - 使用线性插值计算RUL
+16:53:29 - INFO - SOH序列形状: (21580,), 时间序列形状: (21580,)
+16:53:29 - INFO - 处理后形状 - SOH: (21580,), 时间: (21580,)
+16:53:29 - WARNING - 警告: 第一个点低于阈值，使用第一个时间点
+16:53:29 - INFO - 计算出的RUL: 0.00h, EOL在 973.18h
+16:53:29 - INFO - 真实RUL: 961.16h
+16:53:29 - INFO - 预测RUL: 0.00h
+16:53:29 - INFO - RUL MAE: 961.16h
+16:53:29 - INFO - RUL MAPE: 100.00%
+16:53:29 - INFO - PHM评分: 552809454934310245282619871376732529360896.0000
+16:53:29 - INFO - 生成可视化图表...
+16:53:29 - INFO - 中文字体设置成功
+16:53:29 - INFO - 绘制训练历史
+
+================================================================================
+评估指标表格:
+================================================================================
+| 条件 | MAE | RMSE | MAPE | R² |
+|---|---|---|---|---|
+| 实验 | 0.019157 | 0.021592 | 0.594659 | -2.667302 |
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+D:\pythonfile\PythonProject\train.py:1989: UserWarning:
+
+Glyph 178 (\N{SUPERSCRIPT TWO}) missing from font(s) SimHei.
+
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+D:\pythonfile\PythonProject\train.py:1992: UserWarning:
+
+Glyph 178 (\N{SUPERSCRIPT TWO}) missing from font(s) SimHei.
+
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+D:\PyCharm 2024.3.5\plugins\python-ce\helpers\pycharm_matplotlib_backend\backend_interagg.py:124: UserWarning:
+
+Glyph 178 (\N{SUPERSCRIPT TWO}) missing from font(s) SimHei.
+
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+D:\pythonfile\PythonProject\train.py:1993: UserWarning:
+
+Glyph 178 (\N{SUPERSCRIPT TWO}) missing from font(s) SimHei.
+
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+Font 'default' does not have a glyph for '\u2212' [U+2212], substituting with a dummy symbol.
+D:\PyCharm 2024.3.5\plugins\python-ce\helpers\pycharm_matplotlib_backend\backend_interagg.py:124: UserWarning:
+
+Glyph 178 (\N{SUPERSCRIPT TWO}) missing from font(s) SimHei.
+
+16:53:30 - INFO - 训练历史图保存: train_results_paper\gru_pemfc_paper_experiment_fixed\images\training_history.png
+16:53:30 - INFO - 绘制电压预测对比图
+16:53:30 - INFO - 绘图输入形状 - true_voltage: (21580,), pred_voltage: (21580,), time_series: (21580,)
+16:53:30 - INFO - 置信区间长度: 21530, 时间序列长度: 21530
+16:53:30 - INFO - 测试集置信区间长度: 6425
+16:53:31 - INFO - 电压预测图保存: train_results_paper\gru_pemfc_paper_experiment_fixed\images\voltage_prediction.png
+16:53:31 - INFO - 绘制SOH和RUL曲线
+16:53:31 - INFO - 基于论文方法计算V_initial
+D:\pythonfile\PythonProject\.venv\Lib\site-packages\pywt\_multilevel.py:43: UserWarning:
+
+Level value of 4 is too high: all coefficients will experience boundary effects.
+
+16:53:31 - INFO - 计算出的V_initial: 3.2161V (CV=0.0000, 窗口=100)
+16:53:31 - INFO - 基于论文方法计算V_initial
+16:53:31 - WARNING - 警告: 初始电压不稳定 (CV=0.9754 > 0.01)，扩大窗口
+16:53:31 - INFO - 计算出的V_initial: 2.4504V (CV=0.5694, 窗口=200)
+16:53:32 - INFO - SOH/RUL曲线图保存: train_results_paper\gru_pemfc_paper_experiment_fixed\images\soh_rul_curve.png
+16:53:32 - INFO - 生成最终报告...
+16:53:32 - INFO - 最终报告保存: train_results_paper\gru_pemfc_paper_experiment_fixed\configs\final_report.json
+16:53:32 - INFO - ================================================================================
+16:53:32 - INFO - 训练和评估成功完成!
+16:53:32 - INFO - ================================================================================
+
+================================================================================
+PEMFC燃料电池GRU寿命预测模型 - 训练总结
+================================================================================
+
+最佳模型: Epoch 45
+最佳验证损失: 1.757545
+
+测试集指标:
+  MAE: 0.019157
+  RMSE: 0.021592
+  MAPE: 0.5946589708328247
+  R2: -2.667302
+
+RUL预测:
+  真实RUL: 961.1583200279117 h
+  预测RUL: 0 h
+  RUL MAE: 961.16 h
+  RUL MAPE: 100.0%
+
+结果保存到: train_results_paper\gru_pemfc_paper_experiment_fixed
+================================================================================
+
+================================================================================
+✓ 训练成功完成!
+
+改进模型的建议:
+1. 如果验证损失高（过拟合）:
+   - 增加dropout_rate (0.4-0.5)
+   - 减少gru_hidden_size (32-48)
+   - 添加L2正则化 (增加weight_decay到0.001)
+
+2. 如果训练损失高（欠拟合）:
+   - 减少dropout_rate (0.1-0.2)
+   - 增加gru_hidden_size (128-256)
+   - 增加gru_num_layers (3)
+   - 增加learning_rate (0.005)
+
+3. 如果训练不稳定:
+   - 减少learning_rate (0.0005)
+   - 减少batch_size (16-24)
+   - 减少grad_clip (0.5)
+================================================================================
+
+进程已结束，退出代码为 0

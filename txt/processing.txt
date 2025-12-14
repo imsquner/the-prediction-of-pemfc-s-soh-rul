@@ -1,0 +1,760 @@
+基于机器学习的质子交换膜燃料电池性能寿命预测
+1.模型选择：gru：【项目背景】
+我需要开发一个基于GRU（门控循环单元）的机器学习模型，用于质子交换膜燃料电池（PEMFC）的性能寿命预测，核心聚焦模型的训练（train）环节。
+
+【用户背景】
+我是编程新手，完全不理解GRU模型中各类参数的定义、作用和调优逻辑，需要代码具备极强的可读性和可修改性。
+
+【核心要求】
+1. 模型框架：优先使用Python+TensorFlow/Keras（新手友好），核心模型为GRU，聚焦训练流程（数据预处理→模型构建→训练→日志输出）；
+2. 参数设计：将GRU所有关键参数（units、dropout、recurrent_dropout等）和训练参数（batch_size、epochs、learning_rate等）集中管理（如参数字典），每个参数标注【作用】【默认值】【修改建议】；
+3. 日志系统：使用Python logging模块，输出训练全流程日志（参数配置、数据维度、每轮训练损失/精度、训练耗时、异常信息等），日志格式清晰，方便我复制日志给AI工具辅助修改参数；
+4. 注释规范：代码中每一行核心逻辑（尤其是GRU相关）都有详细注释，新手能看懂“为什么这么写”；
+5. 数据适配：模拟PEMFC时序数据集（包含电压、电流、温度、湿度、运行时间、寿命剩余等特征），无需真实数据，但要贴合PEMFC寿命预测的时序特性；
+6. 输出附加：代码末尾单独列出“GRU参数解释表”和“新手参数修改指南”，说明不同参数修改对模型的影响（如过拟合、训练速度、预测精度）。
+
+【输出格式】
+- 完整可运行的Python代码（直接复制即可执行）；
+- 代码内包含logging日志配置+训练全流程日志输出；
+- 代码末尾附“GRU参数解释”和“新手修改指南”。
+
+
+
+2.参数选择：为了降低模型复杂性并提高模型性能，根据 CatBoost 模型评估
+结果和 PEMFC退化机制分析选择监测参数：
+
+“请帮我生成一段Python代码，实现**PEMFC燃料电池系统监测参数的重要性分析**，代码需覆盖以下流程（对应我的研究场景）：
+
+1. **数据预处理环节**：
+   - 预留数据加载接口（我后续会补充具体数据结构，你可以用示例DataFrame占位）；
+   - 对原始数据执行归一化处理；
+   - 定义标签与输入特征：以“堆电压”作为模型标签（目标变量），其余监测参数作为输入特征。
+
+2. **参数重要性评估环节**：
+   - 使用CatBoost模型训练（需包含模型初始化、训练的代码，无需过度调参，保持基础配置即可）；
+   - 从训练后的CatBoost模型中提取**各输入特征的重要性得分**。
+
+3. **结果可视化与排序环节**：
+   - 对提取的参数重要性得分按**降序排序**；
+   - 绘制与“图3.9”样式一致的柱状图：横轴为监测参数名称（如空气出口流量、冷却水流量等），纵轴为重要性得分，柱状图按重要性从高到低排列。
+
+4. 代码要求：
+   - 每一步添加清晰注释，说明对应功能；
+   - 可视化部分需保证参数名称在横轴完整显示（可调整布局避免重叠）；
+   - 代码模块化，方便我替换自己的实际数据集。
+
+补充背景：我的监测参数包含（但不限于）空气出口流量、冷却水流量、氢气入口温度、电流、电流密度、氢气压力等，代码需兼容这类参数的输入。”
+缺失值处理：补充 “线性插值 + 3σ 原则剔除异常值” 的代码逻辑（先插值填充缺失值，再剔除超出均值 ±3 倍标准差的离群点）；
+训练 / 验证集划分：按时间顺序拆分（如前 70% 训练，后 30% 验证），禁止 shuffle，并在代码中明确划分逻辑。可视化样式：指定字体（如 Times New Roman）、字号（横轴 / 纵轴标签 12 号，标题 14 号）、柱状图颜色（按重要性梯度着色，如从深红到浅红）；
+图片保存：指定保存格式（PNG+PDF）、分辨率（300dpi）、图片尺寸（如 10×6 英寸）。
+
+
+
+
+3.所提模型的预测性能采用四种常用指标来评估，分别为：（a）MAE：平均绝对误差。（b）RMSE：均方根误差。（c）MAPE：平均绝对百分比误差。（d）R2：决定系数。
+### 模型训练阶段指标分析与表格生成Prompt
+
+#### 场景与目标
+当前处于模型训练阶段，需配合现有训练代码，自动计算模型在（训练集/验证集/测试集）上的4项预测性能指标，并将不同实验条件（如不同学习率）下的指标整理为markdown表格，直观体现模型准确性。
+
+#### 输入数据格式
+我会在训练代码中提供以下输入（需与你的函数适配）：
+- `y_true`：真实标签数组（如SOH值，类型为numpy数组/torch张量）；
+- `y_pred`：模型预测数组（与`y_true`维度一致，类型为numpy数组/torch张量）；
+- `condition`：当前实验条件标识（如学习率、窗口大小，类型为字符串/数值）。
+
+
+#### 功能要求
+请实现以下两个核心函数，与训练代码配合运行：
+1. **指标计算函数**：
+   - 函数名：`calculate_metrics(y_true, y_pred)`；
+   - 输入：真实标签`y_true`、预测值`y_pred`；
+   - 输出：包含4项指标的字典，键为`["MAE", "RMSE", "MAPE", "R²"]`，值为对应指标的浮点数值（保留4位小数）；
+   - 指标计算逻辑：
+     - MAE：$\text{MAE} = \frac{1}{n}\sum_{i=1}^n |y_{\text{true},i} - y_{\text{pred},i}|$；
+     - RMSE：$\text{RMSE} = \sqrt{\frac{1}{n}\sum_{i=1}^n (y_{\text{true},i} - y_{\text{pred},i})^2}$；
+     - MAPE：$\text{MAPE} = \frac{1}{n}\sum_{i=1}^n \left|\frac{y_{\text{true},i} - y_{\text{pred},i}}{y_{\text{true},i}}\right|$（若`y_true`为0需做防除零处理）；
+     - R²：$\text{R}^2 = 1 - \frac{\sum_{i=1}^n (y_{\text{true},i} - y_{\text{pred},i})^2}{\sum_{i=1}^n (y_{\text{true},i} - \bar{y}_{\text{true}})^2}$（$\bar{y}_{\text{true}}$为真实标签均值）。
+
+2. **表格生成函数**：
+   - 函数名：`generate_metrics_table(metrics_records)`；
+   - 输入：`metrics_records`为列表，每个元素是字典（包含`"condition"`键和指标字典），示例：`[{"condition": "20%", "MAE": 0.0027, "RMSE": 0.0039, "MAPE": 0.0008, "R²": 0.9900}, ...]`；
+   - 输出：markdown格式的指标表格（与我提供的示例格式完全一致，包含表头“学习率（或实验条件）、MAE、RMSE、MAPE、R²”）；
+   - 额外功能：自动将表格打印到控制台，并支持返回表格字符串用于保存到文件。
+
+
+#### 输出要求
+- 函数需兼容numpy和torch张量（若输入为torch张量，需先转为numpy数组计算）；
+- 指标数值保留4位小数，与示例格式一致；
+- 表格需与以下示例的样式、对齐方式完全匹配：
+
+```markdown
+| 学习率 | MAE    | RMSE   | MAPE   | R²     |
+|--------|--------|--------|--------|--------|
+| 20%    | 0.0027 | 0.0039 | 0.0008 | 0.9900 |
+| 40%    | 0.0024 | 0.0036 | 0.0007 | 0.9910 |
+```
+
+- 需附带调用示例：说明如何在训练循环中调用`calculate_metrics`收集指标，再用`generate_metrics_table`生成表格。
+表格生成函数支持多列实验条件（如表头为 “工况、窗口大小、学习率、MAE、RMSE、MAPE、R²”）；
+支持按 “工况 / 窗口大小” 分组汇总指标（如计算同一工况下不同学习率的指标均值）。要求计算多次实验（如 5 次）的指标 “均值 ± 标准差”，并在表格中展示；
+
+
+
+
+4.小波阈值去噪（WTD），对原始数据进行“平滑”去噪：
+
+请基于“小波阈值去噪（WTD）”方法，编写燃料电池数据预处理的去噪代码部分，需严格遵循以下流程、参数与公式：
+
+### 1. 数据定义
+将待处理的燃料电池原始时间序列数据定义为：
+$$f(t) = \{x_1, x_2, ..., x_{t-1}, x_t\} \quad (i=t, t为时间时刻)$$
+
+
+### 2. 小波分解步骤
+- 对原始时间序列$f(t)$执行**6层小波分解**，得到：
+  - 近似系数：$cA_6$（保存信号核心有效特征）；
+  - 6层细节系数：$cD_1, cD_2, ..., cD_6$（包含噪声与尖峰）。
+- 分解后的小波系数集合表示为：
+  $$W_f(a,b) = cA_6 + \sum_{i=1}^6 cD_i$$
+  （其中$a$为缩放因子，$b$为时间轴位移因子）
+
+
+### 3. 阈值计算步骤
+1. 对小波系数集合$W_f(a,b)$的所有元素取绝对值，得到$|W_f(a,b)|$；
+2. 将$|W_f(a,b)|$按**从小到大排序**，得到排序后的序列；
+3. 对排序后的序列中每个元素取平方，得到序列$F(k)$：
+   $$F(k) = \left( sort\left(|W_f(a,b)|\right) \right)^2 \quad (k=1,2,...,N; N为原始数据样本数量)$$
+4. 计算对应阈值$\lambda_k$：
+   $$\lambda_k = \sqrt{F(k)}$$
+
+
+### 4. 软阈值处理步骤
+仅对**细节系数$cD_1 \sim cD_6$（噪声部分）**执行软阈值处理，近似系数$cA_6$保持不变。处理规则为：
+$$W_\lambda = \begin{cases}
+sign(w) \times (|w| - \lambda_k), & |w| \geq \lambda_k \\
+0, & |w| < \lambda_k
+\end{cases}$$
+（其中$w$为细节系数元素，$sign(w)$为符号函数：$w>0$时取1，$w<0$时取-1）
+
+
+### 5. 数据重构步骤
+使用“处理后的细节系数”+“原始近似系数$cA_6$”执行**小波逆分解（重构）**，输出去噪后的燃料电池数据。
+
+
+请基于上述流程编写数据预处理的去噪代码，确保每一步匹配对应的公式与参数。
+补充需求：仅实现去噪流程，未验证去噪效果，无法判断去噪是否合理。
+补充内容：
+新增去噪效果评估指标：信噪比（SNR）、均方根误差（RMSE）、平滑度（如去噪后数据的一阶差分方差）；
+对比去噪前后的电压曲线可视化（新增子图展示去噪效果）。
+小波基函数：指定燃料电池数据常用的sym8（需说明选择依据）；
+阈值 k 值：明确排序后的 F (k) 取 “90 分位数”（或中位数）作为阈值（燃料电池噪声多为高频小幅度，90 分位数可保留有效信号）；
+
+
+
+
+
+5.对所有训练完成的模型进行可视化展示
+### 可视化模块代码撰写Prompt
+
+#### 背景与目标
+我需要撰写项目中“燃料电池堆电压预测结果可视化”的Python代码（基于matplotlib库），核心目标是对所有训练完成的模型输出结果进行可视化展示，生成与指定示例图（图3.10）样式一致的曲线对比图。代码需具备可运行性，能直接与主代码的输出数据衔接，无需额外修改核心逻辑即可替换真实数据使用。
+
+#### 可视化核心样式与元素要求
+1. **曲线定义**：
+   - 蓝色实线：代表燃料电池堆电压的真实值；
+   - 绿色实线：代表模型在训练数据集上的电压预测结果（仅覆盖训练时段）；
+   - 红色实线：代表模型在测试数据集上的电压预测结果（仅覆盖测试时段）。
+2. **坐标轴配置**：
+   - 横轴（X轴）：标签为“时间/h”，范围自动适配输入的时间序列数据；
+   - 纵轴（Y轴）：标签为“电压/V”，范围需自动覆盖电压真实值与预测值的全部区间。
+3. **辅助视觉元素**：
+   - 垂直虚线：标记训练阶段与测试阶段的分隔时间点，标注“训练阶段”“预测阶段”文字；
+   - 水平虚线：标记电压失效阈值，标注“失效阈值 EOL=XX h”（XX为失效时间，从主代码传入）；
+   - 箭头标注：在测试阶段区域添加“剩余使用寿命”文字及箭头指向对应区域；
+   - 图例：位于图表右上角，清晰标注“原始数据（真实值）”“训练集预测结果”“测试集预测结果”。
+4. **标题与保存**：
+   - 图表标题：动态包含训练阶段的时长（如“训练长度为XXX小时预测寿命预测结果”，XXX为训练结束时间，从主代码传入）；
+   - 图片保存：支持将可视化结果保存为高清图片（分辨率≥300dpi），保存路径可配置。
+
+#### 代码技术要求
+1. 代码兼容Python 3.8及以上版本，仅依赖matplotlib和numpy库；
+2. 使用通用化变量名（如时间序列、真实电压、训练集预测电压、测试集预测电压等），可直接对接主代码输出的变量，无需修改变量名即可替换数据；
+3. 自动处理训练/测试集数据的时段匹配：通过掩码逻辑仅在对应时段绘制训练/测试预测曲线，避免数据维度不匹配问题；
+4. 代码结构清晰，包含完整的函数定义，函数内添加详细注释说明各元素的绘制逻辑；
+5. 提供简单的调用示例（仅保留占位符，无需真实数据），示例中明确标注“替换为主代码输出的真实数据即可运行”。
+置信区间计算：基于高斯 NLL 输出的 “均值 + 标准差”，95% 置信区间为[mean - 1.96*std, mean + 1.96*std]；
+代码中明确从模型输出提取均值和标准差的逻辑（如模型输出为[pred_mean, pred_std]）。补充内容：
+新增 SOH 曲线子图（横轴时间，纵轴 SOH，标注 0.96 故障阈值线）；
+标注真实 RUL 和预测 RUL 的时间点（如垂直红线标注预测 RUL，蓝线标注真实 RUL）；
+计算 RUL 预测误差（绝对误差、相对误差）并标注在图中。
+
+
+
+6.重要参数选择：将初始电压的96%设定为质子交换膜燃料电池在稳态和动态条件下的故障阈值
+我们定义SOH为：SOH_t = V_t / V_initial，其中V_initial是初始时刻的电压（是前100个点的平均）。这样SOH从1开始，随着退化逐渐降低。RUL定义为到达某个阈值的时间，电压损失百分比等于功率损失百分比。因此，我们可以设定电压阈值为：阈值电压 = V_initial * (1 - 损失百分比)
+补充内容：
+V_initial 计算：先对前 100 个电压点做 SG 滤波 / 小波去噪，再取均值；
+补充 V_initial 的稳定性验证（如计算前 100 点的变异系数 CV<1% 则认为稳定，否则扩大至前 200 点）。
+RUL 插值逻辑：当 SOH 在 t1 和 t2 之间跨越阈值（SOH (t1)>0.96，SOH (t2)<0.96），用线性插值计算精确 RUL：\(RUL = t1 + (0.96 - SOH(t1)) * (t2 - t1) / (SOH(t2) - SOH(t1))\)明确 RUL 的评估指标（如 RUL 绝对误差 (MAE_RUL)、RUL 相对误差 (MAPE_RUL)、评分函数（PHM 挑战赛标准））。
+
+全流程添加异常捕获逻辑（如数据加载失败、模型训练中断、可视化保存路径不存在等），避免代码崩溃。补充：要求各模块添加单元测试用例（如数据预处理模块测试 SG 滤波效果、指标函数测试计算正确性）；
+补充：添加训练日志功能（记录每轮迭代的损失、指标、超参数，保存为 log 文件）。
+  我目前已经完成前两部分的探索，请你使用pytorch，# PEMFC寿命预测GRU模型训练框架（PyTorch版）
+
+请生成一个基于PyTorch的GRU模型训练框架，用于质子交换膜燃料电池（PEMFC）的性能寿命预测，需满足以下要求：
+
+## 核心框架
+1. 使用PyTorch实现GRU模型，专注于训练流程（数据预处理→模型构建→训练→评估→可视化）
+2. 确保代码支持GPU训练，包含GPU配置与设备选择逻辑
+3. 模块化设计，包含数据处理、模型定义、训练过程、评估指标、可视化等独立模块
+
+## 数据处理
+1. 仅加载FC1数据，按时间顺序划分为70%训练集和30%验证集，禁止shuffle
+2. 数据预处理流程：
+   - 线性插值填充缺失值
+   - 3σ原则剔除异常值
+   - 小波阈值去噪（使用sym8小波基，6层分解，90分位数阈值）
+   - 特征标准化处理
+3. 特征选择：使用提供的参数重要性排序，至少包含累积百分比达96.4%的特征
+
+## 模型设计
+1. GRU模型参数集中管理，每个参数需标注【作用】【默认值】【修改建议】
+2. 训练参数（batch_size、epochs、learning_rate等）同样集中配置
+3. 模型输出包含预测均值和标准差，用于计算95%置信区间
+
+## 训练过程
+1. 完善的日志系统，记录参数配置、数据维度、每轮训练损失/指标、训练耗时等
+2. 实现早停机制和学习率调整策略
+3. 训练过程中计算并记录MAE、RMSE、MAPE、R²四个评估指标
+
+## 结果输出
+1. 按指定目录结构保存训练结果：
+   - train_results/models/：保存.pth模型文件
+   - train_results/csv_files/：保存包含时间戳、真实值、预测值等的CSV文件
+   - train_results/images/：保存电压预测对比图、SOH曲线对比图、训练历史图等
+   - train_results/tables/：保存指标表格（Markdown和CSV格式）
+   - train_results/logs/：保存训练日志文件
+
+## 寿命评估
+1. SOH计算：SOH_t = V_t / V_initial（V_initial为去噪后的初始电压均值）
+2. RUL计算：基于SOH=0.96的阈值，使用线性插值获取精确RUL
+3. RUL评估指标：MAE_RUL、MAPE_RUL、PHM评分函数
+
+## 可视化要求
+1. 电压预测对比图：真实值、训练集预测、测试集预测曲线
+2. SOH曲线对比图：包含0.96故障阈值线，标注真实RUL和预测RUL
+3. 训练历史图：损失曲线和评估指标曲线
+4. 所有图表需指定字体、字号，确保中文正常显示
+
+## 代码规范
+1. 每一行核心逻辑都有详细注释，尤其GRU相关部分
+2. 包含异常捕获逻辑，避免代码崩溃
+3. 代码末尾附"GRU参数解释表"和"新手参数修改指南"
+
+请生成完整可运行的代码框架，确保各模块衔接顺畅，便于后续调试和扩展。 注意，增加输出，使得我每次输出后可以根据日志和图像修改我模型的参数 第二阶段数据处理日志如下：D:\pythonfile\PythonProject\.venv\Scripts\python.exe D:\pythonfile\PythonProject\data_processing.py 
+
+======================================================================
+开始正式数据处理...
+======================================================================
+
+
+======================================================================
+开始处理 FC1 数据集 (数据路径: data)
+======================================================================
+
+步骤1: 加载并合并 FC1 数据文件...
+  正在加载: FC1_Ageing_part1.csv
+    已排除电压列: ['U1 (V)', 'U2 (V)', 'U3 (V)', 'U4 (V)', 'U5 (V)']
+    加载完成: 65535行, 20列
+  正在加载: FC1_Ageing_part2.csv
+    已排除电压列: ['U1 (V)', 'U2 (V)', 'U3 (V)', 'U4 (V)', 'U5 (V)']
+    加载完成: 65535行, 20列
+  正在加载: FC1_Ageing_part3.csv
+    已排除电压列: ['U1 (V)', 'U2 (V)', 'U3 (V)', 'U4 (V)', 'U5 (V)']
+    加载完成: 12792行, 20列
+数据合并完成: 143862 行, 20 列
+列名: ['time', 'stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+
+步骤2: 基础数据预处理 (增强缺失值填充 + IQR原则 + 局部异常检测)...
+  列 'stack_voltage': 处理 5 个异常值 (IQR范围: [3.1275, 3.4115])
+  列 'current_density': 处理 20266 个异常值 (IQR范围: [0.7013, 0.7033])
+  列 'current': 处理 20266 个异常值 (IQR范围: [70.1335, 70.3295])
+  列 'hydrogen_inlet_temp': 处理 17648 个异常值 (IQR范围: [27.1390, 28.5950])
+  列 'hydrogen_outlet_temp': 处理 8345 个异常值 (IQR范围: [40.4165, 42.0045])
+  列 'air_inlet_temp': 处理 1857 个异常值 (IQR范围: [42.0305, 42.5465])
+  列 'air_outlet_temp': 处理 6730 个异常值 (IQR范围: [51.4400, 51.7760])
+  列 'coolant_inlet_temp': 处理 7687 个异常值 (IQR范围: [53.6085, 53.9405])
+  列 'coolant_outlet_temp': 处理 8278 个异常值 (IQR范围: [55.3180, 55.5660])
+  列 'air_inlet_pressure': 处理 2086 个异常值 (IQR范围: [1295.7775, 1304.4215])
+  列 'air_outlet_pressure': 处理 1758 个异常值 (IQR范围: [1264.3955, 1273.2715])
+  列 'hydrogen_outlet_pressure': 处理 28 个异常值 (IQR范围: [1287.2130, 1312.5330])
+  列 'hydrogen_inlet_pressure': 处理 26 个异常值 (IQR范围: [1274.8595, 1299.6955])
+  列 'hydrogen_inlet_flow': 处理 20455 个异常值 (IQR范围: [4.7920, 4.8000])
+  列 'hydrogen_outlet_flow': 处理 90 个异常值 (IQR范围: [2.0015, 2.2375])
+  列 'air_inlet_flow': 处理 12000 个异常值 (IQR范围: [23.0330, 23.0410])
+  列 'air_outlet_flow': 处理 2942 个异常值 (IQR范围: [20.9210, 21.6810])
+  列 'coolant_flow': 处理 1345 个异常值 (IQR范围: [1.9280, 2.1040])
+  列 'air_inlet_humidity': 处理 6107 个异常值 (IQR范围: [49.3640, 50.5960])
+  共处理 137919 个异常值
+
+步骤2.3: 局部异常检测（滑动窗口方法）...
+  检测stack_voltage局部异常（如900h附近的突变）...
+  处理 235 个局部异常点（如900h附近的突变）
+  ✓ FC1 预处理后无缺失值
+
+步骤3: 全列自适应多阶段滤波处理...
+  将对 19 个数值列进行自适应滤波处理:
+  列列表: ['stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+
+  [1/19] 处理列: 'stack_voltage'
+    关键列，应用增强处理
+    滤波参数: 中值窗口=7, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0001, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [2/19] 处理列: 'current_density'
+    关键列，应用增强处理
+    滤波参数: 中值窗口=3, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0000, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [3/19] 处理列: 'current'
+    关键列，应用增强处理
+    滤波参数: 中值窗口=3, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0005, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [4/19] 处理列: 'hydrogen_inlet_temp'
+    温度列，应用温度数据处理策略
+    滤波参数: 中值窗口=7, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0001, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [5/19] 处理列: 'hydrogen_outlet_temp'
+    温度列，应用温度数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0501, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [6/19] 处理列: 'air_inlet_temp'
+    温度列，应用温度数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0310, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [7/19] 处理列: 'air_outlet_temp'
+    温度列，应用温度数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0121, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [8/19] 处理列: 'coolant_inlet_temp'
+    温度列，应用温度数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0240, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [9/19] 处理列: 'coolant_outlet_temp'
+    温度列，应用温度数据处理策略
+    滤波参数: 中值窗口=3, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0282, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [10/19] 处理列: 'air_inlet_pressure'
+    压力列，应用压力数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.7228, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [11/19] 处理列: 'air_outlet_pressure'
+    压力列，应用压力数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.5267, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [12/19] 处理列: 'hydrogen_outlet_pressure'
+    压力列，应用压力数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 2.7819, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [13/19] 处理列: 'hydrogen_inlet_pressure'
+    压力列，应用压力数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 2.7925, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [14/19] 处理列: 'hydrogen_inlet_flow'
+    流量列，应用流量数据处理策略
+    滤波参数: 中值窗口=3, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0011, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [15/19] 处理列: 'hydrogen_outlet_flow'
+    流量列，应用流量数据处理策略
+    滤波参数: 中值窗口=7, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0245, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [16/19] 处理列: 'air_inlet_flow'
+    流量列，应用流量数据处理策略
+    滤波参数: 中值窗口=3, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0010, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [17/19] 处理列: 'air_outlet_flow'
+    流量列，应用流量数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0076, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [18/19] 处理列: 'coolant_flow'
+    流量列，应用流量数据处理策略
+    滤波参数: 中值窗口=7, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0016, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [19/19] 处理列: 'air_inlet_humidity'
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0707, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  全列滤波处理完成，共处理 19 个数值列
+
+  各列滤波效果摘要:
+    stack_voltage: 原始标准差=0.0427, 最终标准差=0.0426, 噪声减少=0.0001 (0.2%)
+    current_density: 原始标准差=0.0005, 最终标准差=0.0005, 噪声减少=0.0000 (1.1%)
+    current: 原始标准差=0.0477, 最终标准差=0.0471, 噪声减少=0.0005 (1.1%)
+    hydrogen_inlet_temp: 原始标准差=0.3602, 最终标准差=0.3601, 噪声减少=0.0001 (0.0%)
+    hydrogen_outlet_temp: 原始标准差=0.3328, 最终标准差=0.2828, 噪声减少=0.0501 (15.0%)
+    air_inlet_temp: 原始标准差=0.0924, 最终标准差=0.0615, 噪声减少=0.0310 (33.5%)
+    air_outlet_temp: 原始标准差=0.0685, 最终标准差=0.0564, 噪声减少=0.0121 (17.7%)
+    coolant_inlet_temp: 原始标准差=0.0675, 最终标准差=0.0434, 噪声减少=0.0240 (35.6%)
+    coolant_outlet_temp: 原始标准差=0.0487, 最终标准差=0.0204, 噪声减少=0.0282 (58.0%)
+    air_inlet_pressure: 原始标准差=1.6268, 最终标准差=0.9040, 噪声减少=0.7228 (44.4%)
+    air_outlet_pressure: 原始标准差=1.6312, 最终标准差=1.1045, 噪声减少=0.5267 (32.3%)
+    hydrogen_outlet_pressure: 原始标准差=3.5451, 最终标准差=0.7632, 噪声减少=2.7819 (78.5%)
+    hydrogen_inlet_pressure: 原始标准差=3.6861, 最终标准差=0.8937, 噪声减少=2.7925 (75.8%)
+    hydrogen_inlet_flow: 原始标准差=0.0020, 最终标准差=0.0009, 噪声减少=0.0011 (53.6%)
+    hydrogen_outlet_flow: 原始标准差=0.0389, 最终标准差=0.0144, 噪声减少=0.0245 (62.9%)
+    air_inlet_flow: 原始标准差=0.0017, 最终标准差=0.0007, 噪声减少=0.0010 (57.6%)
+    air_outlet_flow: 原始标准差=0.1189, 最终标准差=0.1113, 噪声减少=0.0076 (6.4%)
+    coolant_flow: 原始标准差=0.0325, 最终标准差=0.0309, 噪声减少=0.0016 (4.8%)
+    air_inlet_humidity: 原始标准差=0.2522, 最终标准差=0.1815, 噪声减少=0.0707 (28.0%)
+
+步骤4: 电压列增强处理...
+  校验并修复电压数据范围...
+    原始电压范围: [3.165, 3.362]V
+    正常电压范围: [3.00, 3.50]V
+    电压范围正常，无需修复
+
+步骤3.5: 对stack_voltage执行迭代式尖峰去除（最多100次迭代）...
+  迭代1/100：检测到9个尖峰
+  迭代2/100：检测到2个尖峰
+  迭代3/100：检测到4个尖峰
+  迭代4/100：检测到5个尖峰
+  迭代5/100：检测到4个尖峰
+  迭代6/100：检测到4个尖峰
+  迭代7/100：检测到5个尖峰
+  迭代8/100：检测到5个尖峰
+  迭代9/100：检测到5个尖峰
+  迭代10/100：检测到5个尖峰
+  迭代11/100：检测到6个尖峰
+  迭代12/100：检测到5个尖峰
+  迭代13/100：检测到5个尖峰
+  迭代14/100：检测到5个尖峰
+  迭代15/100：检测到6个尖峰
+  迭代16/100：检测到6个尖峰
+  迭代17/100：检测到6个尖峰
+  迭代18/100：检测到4个尖峰
+  迭代19/100：检测到5个尖峰
+  迭代20/100：检测到4个尖峰
+  迭代21/100：检测到5个尖峰
+  迭代22/100：检测到5个尖峰
+  迭代23/100：检测到6个尖峰
+  迭代24/100：检测到4个尖峰
+  迭代25/100：检测到5个尖峰
+  迭代26/100：检测到3个尖峰
+  迭代27/100：检测到2个尖峰
+  迭代28/100：检测到2个尖峰
+  迭代29/100：检测到1个尖峰
+  迭代30/100：检测到0个尖峰
+  迭代尖峰处理完成，最终残留尖峰数: 0
+
+步骤2.4: 处理首尾异常电压数据...
+  正常电压范围: [3.00, 3.50]V
+  检查首尾各 20 个数据点...
+  发现 0 个超出范围的异常点
+  首尾异常处理完成: 共替换 0 个异常值
+    开头部分: 检查了20个点，替换了0个异常值
+    结尾部分: 检查了20个点，替换了0个异常值
+  处理后电压范围: [3.165, 3.362]V
+  电压处理完成: 最终范围 [3.165, 3.362]V
+
+步骤5: 去噪效果验证与评估...
+  去噪效果评估指标:
+    SNR: 15.76 dB
+    RMSE: 0.0027
+    平滑度: 0.0022
+    残留尖峰数: 0
+  全图对比图已保存: processed_results\FC1\FC1_full_comparison.png
+
+步骤6: 保存处理后的数据为NPZ格式...
+  数据已保存至: processed_results\FC1\FC1_processed_data.npz
+  数据形状: (143862, 20)
+  包含特征: ['time', 'stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+
+======================================================================
+FC1 数据集处理完成!
+======================================================================
+
+======================================================================
+开始处理 FC2 数据集 (数据路径: datatest)
+======================================================================
+
+步骤1: 加载并合并 FC2 数据文件...
+  正在加载: FC2_Ageing_part1.csv
+    已删除全缺失值列: ['Unnamed: 25']
+    已排除电压列: ['U1 (V)', 'U2 (V)', 'U3 (V)', 'U4 (V)', 'U5 (V)']
+    加载完成: 65535行, 20列
+  正在加载: FC2_Ageing_part2.csv
+    已排除电压列: ['U1 (V)', 'U2 (V)', 'U3 (V)', 'U4 (V)', 'U5 (V)']
+    加载完成: 61835行, 20列
+  警告: 文件 FC2_Ageing_part3.csv 不存在，跳过
+数据合并完成: 127370 行, 20 列
+列名: ['time', 'stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+
+步骤2: 基础数据预处理 (增强缺失值填充 + IQR原则 + 局部异常检测)...
+  列 'stack_voltage': 处理 1343 个异常值 (IQR范围: [3.1160, 3.3160])
+  列 'current_density': 处理 28853 个异常值 (IQR范围: [0.7003, 0.7011])
+  列 'current': 处理 28853 个异常值 (IQR范围: [70.0260, 70.1060])
+  列 'hydrogen_outlet_temp': 处理 520 个异常值 (IQR范围: [36.1980, 41.1660])
+  列 'air_outlet_temp': 处理 1010 个异常值 (IQR范围: [50.9535, 51.5735])
+  列 'coolant_inlet_temp': 处理 7907 个异常值 (IQR范围: [53.5015, 53.9055])
+  列 'coolant_outlet_temp': 处理 8044 个异常值 (IQR范围: [55.2750, 55.5870])
+  列 'air_inlet_pressure': 处理 848 个异常值 (IQR范围: [1294.9795, 1304.9915])
+  列 'air_outlet_pressure': 处理 586 个异常值 (IQR范围: [1261.3505, 1273.1865])
+  列 'hydrogen_outlet_pressure': 处理 459 个异常值 (IQR范围: [1289.6655, 1309.9655])
+  列 'hydrogen_inlet_pressure': 处理 442 个异常值 (IQR范围: [1275.8285, 1298.3845])
+  列 'hydrogen_inlet_flow': 处理 16413 个异常值 (IQR范围: [4.7900, 4.7980])
+  列 'hydrogen_outlet_flow': 处理 3428 个异常值 (IQR范围: [2.0305, 2.1865])
+  列 'air_inlet_flow': 处理 6711 个异常值 (IQR范围: [23.0330, 23.0410])
+  列 'air_outlet_flow': 处理 791 个异常值 (IQR范围: [20.8980, 21.5460])
+  列 'coolant_flow': 处理 585 个异常值 (IQR范围: [1.9095, 2.1215])
+  列 'air_inlet_humidity': 处理 9636 个异常值 (IQR范围: [51.4600, 53.1080])
+  共处理 116429 个异常值
+
+步骤2.3: 局部异常检测（滑动窗口方法）...
+  检测stack_voltage局部异常（如900h附近的突变）...
+  处理 100 个局部异常点（如900h附近的突变）
+  ✓ FC2 预处理后无缺失值
+
+步骤3: 全列自适应多阶段滤波处理...
+  将对 19 个数值列进行自适应滤波处理:
+  列列表: ['stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+
+  [1/19] 处理列: 'stack_voltage'
+    关键列，应用增强处理
+    滤波参数: 中值窗口=7, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0000, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [2/19] 处理列: 'current_density'
+    关键列，应用增强处理
+    滤波参数: 中值窗口=3, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0000, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [3/19] 处理列: 'current'
+    关键列，应用增强处理
+    滤波参数: 中值窗口=3, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0006, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [4/19] 处理列: 'hydrogen_inlet_temp'
+    温度列，应用温度数据处理策略
+    滤波参数: 中值窗口=7, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0000, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [5/19] 处理列: 'hydrogen_outlet_temp'
+    温度列，应用温度数据处理策略
+    滤波参数: 中值窗口=7, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0412, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [6/19] 处理列: 'air_inlet_temp'
+    温度列，应用温度数据处理策略
+    滤波参数: 中值窗口=7, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0046, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [7/19] 处理列: 'air_outlet_temp'
+    温度列，应用温度数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0107, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [8/19] 处理列: 'coolant_inlet_temp'
+    温度列，应用温度数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0363, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [9/19] 处理列: 'coolant_outlet_temp'
+    温度列，应用温度数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0396, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [10/19] 处理列: 'air_inlet_pressure'
+    压力列，应用压力数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.6102, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [11/19] 处理列: 'air_outlet_pressure'
+    压力列，应用压力数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.5292, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [12/19] 处理列: 'hydrogen_outlet_pressure'
+    压力列，应用压力数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 2.3706, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [13/19] 处理列: 'hydrogen_inlet_pressure'
+    压力列，应用压力数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 2.3620, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [14/19] 处理列: 'hydrogen_inlet_flow'
+    流量列，应用流量数据处理策略
+    滤波参数: 中值窗口=3, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0013, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [15/19] 处理列: 'hydrogen_outlet_flow'
+    流量列，应用流量数据处理策略
+    滤波参数: 中值窗口=7, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0226, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [16/19] 处理列: 'air_inlet_flow'
+    流量列，应用流量数据处理策略
+    滤波参数: 中值窗口=3, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0011, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [17/19] 处理列: 'air_outlet_flow'
+    流量列，应用流量数据处理策略
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0094, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [18/19] 处理列: 'coolant_flow'
+    流量列，应用流量数据处理策略
+    滤波参数: 中值窗口=7, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0031, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  [19/19] 处理列: 'air_inlet_humidity'
+    滤波参数: 中值窗口=5, 小波层数=5, 平滑窗口=15
+    处理完成: 噪声减少 0.0805, 应用阶段: extreme_value_pre_scan, median_filter, wavelet_denoise, savgol_smooth
+
+  全列滤波处理完成，共处理 19 个数值列
+
+  各列滤波效果摘要:
+    stack_voltage: 原始标准差=0.0424, 最终标准差=0.0424, 噪声减少=0.0000 (0.1%)
+    current_density: 原始标准差=0.0002, 最终标准差=0.0002, 噪声减少=0.0000 (2.8%)
+    current: 原始标准差=0.0225, 最终标准差=0.0219, 噪声减少=0.0006 (2.8%)
+    hydrogen_inlet_temp: 原始标准差=1.9652, 最终标准差=1.9652, 噪声减少=0.0000 (0.0%)
+    hydrogen_outlet_temp: 原始标准差=0.7243, 最终标准差=0.6831, 噪声减少=0.0412 (5.7%)
+    air_inlet_temp: 原始标准差=1.4428, 最终标准差=1.4382, 噪声减少=0.0046 (0.3%)
+    air_outlet_temp: 原始标准差=0.1109, 最终标准差=0.1002, 噪声减少=0.0107 (9.6%)
+    coolant_inlet_temp: 原始标准差=0.0815, 最终标准差=0.0452, 噪声减少=0.0363 (44.5%)
+    coolant_outlet_temp: 原始标准差=0.0620, 最终标准差=0.0224, 噪声减少=0.0396 (63.8%)
+    air_inlet_pressure: 原始标准差=1.8916, 最终标准差=1.2814, 噪声减少=0.6102 (32.3%)
+    air_outlet_pressure: 原始标准差=1.9660, 最终标准差=1.4368, 噪声减少=0.5292 (26.9%)
+    hydrogen_outlet_pressure: 原始标准差=3.3207, 最终标准差=0.9502, 噪声减少=2.3706 (71.4%)
+    hydrogen_inlet_pressure: 原始标准差=3.5153, 最终标准差=1.1533, 噪声减少=2.3620 (67.2%)
+    hydrogen_inlet_flow: 原始标准差=0.0018, 最终标准差=0.0005, 噪声减少=0.0013 (73.2%)
+    hydrogen_outlet_flow: 原始标准差=0.0333, 最终标准差=0.0107, 噪声减少=0.0226 (67.8%)
+    air_inlet_flow: 原始标准差=0.0016, 最终标准差=0.0005, 噪声减少=0.0011 (70.8%)
+    air_outlet_flow: 原始标准差=0.0945, 最终标准差=0.0851, 噪声减少=0.0094 (9.9%)
+    coolant_flow: 原始标准差=0.0343, 最终标准差=0.0312, 噪声减少=0.0031 (8.9%)
+    air_inlet_humidity: 原始标准差=0.3567, 最终标准差=0.2761, 噪声减少=0.0805 (22.6%)
+
+步骤4: 电压列增强处理...
+  校验并修复电压数据范围...
+    原始电压范围: [3.126, 3.324]V
+    正常电压范围: [3.00, 3.50]V
+    电压范围正常，无需修复
+
+步骤3.5: 对stack_voltage执行迭代式尖峰去除（最多100次迭代）...
+  迭代1/100：检测到135个尖峰
+  迭代2/100：检测到39个尖峰
+  迭代3/100：检测到41个尖峰
+  迭代4/100：检测到38个尖峰
+  迭代5/100：检测到47个尖峰
+  迭代6/100：检测到40个尖峰
+  迭代7/100：检测到43个尖峰
+  迭代8/100：检测到33个尖峰
+  迭代9/100：检测到39个尖峰
+  迭代10/100：检测到35个尖峰
+  迭代11/100：检测到38个尖峰
+  迭代12/100：检测到34个尖峰
+  迭代13/100：检测到36个尖峰
+  迭代14/100：检测到35个尖峰
+  迭代15/100：检测到37个尖峰
+  迭代16/100：检测到34个尖峰
+  迭代17/100：检测到33个尖峰
+  迭代18/100：检测到33个尖峰
+  迭代19/100：检测到28个尖峰
+  迭代20/100：检测到28个尖峰
+  迭代21/100：检测到24个尖峰
+  迭代22/100：检测到24个尖峰
+  迭代23/100：检测到21个尖峰
+  迭代24/100：检测到21个尖峰
+  迭代25/100：检测到20个尖峰
+  迭代26/100：检测到20个尖峰
+  迭代27/100：检测到19个尖峰
+  迭代28/100：检测到19个尖峰
+  迭代29/100：检测到19个尖峰
+  迭代30/100：检测到21个尖峰
+  迭代31/100：检测到21个尖峰
+  迭代32/100：检测到22个尖峰
+  迭代33/100：检测到20个尖峰
+  迭代34/100：检测到17个尖峰
+  迭代35/100：检测到18个尖峰
+  迭代36/100：检测到17个尖峰
+  迭代37/100：检测到19个尖峰
+  迭代38/100：检测到20个尖峰
+  迭代39/100：检测到18个尖峰
+  迭代40/100：检测到18个尖峰
+  迭代41/100：检测到17个尖峰
+  迭代42/100：检测到17个尖峰
+  迭代43/100：检测到16个尖峰
+  迭代44/100：检测到15个尖峰
+  迭代45/100：检测到16个尖峰
+  迭代46/100：检测到14个尖峰
+  迭代47/100：检测到12个尖峰
+  迭代48/100：检测到12个尖峰
+  迭代49/100：检测到10个尖峰
+  迭代50/100：检测到9个尖峰
+  迭代51/100：检测到10个尖峰
+  迭代52/100：检测到9个尖峰
+  迭代53/100：检测到9个尖峰
+  迭代54/100：检测到10个尖峰
+  迭代55/100：检测到9个尖峰
+  迭代56/100：检测到8个尖峰
+  迭代57/100：检测到8个尖峰
+  迭代58/100：检测到7个尖峰
+  迭代59/100：检测到5个尖峰
+  迭代60/100：检测到4个尖峰
+  迭代61/100：检测到3个尖峰
+  迭代62/100：检测到2个尖峰
+  迭代63/100：检测到1个尖峰
+  迭代64/100：检测到0个尖峰
+  迭代尖峰处理完成，最终残留尖峰数: 0
+
+步骤2.4: 处理首尾异常电压数据...
+  正常电压范围: [3.00, 3.50]V
+  检查首尾各 20 个数据点...
+  发现 0 个超出范围的异常点
+  首尾异常处理完成: 共替换 0 个异常值
+    开头部分: 检查了20个点，替换了0个异常值
+    结尾部分: 检查了20个点，替换了0个异常值
+  处理后电压范围: [3.126, 3.317]V
+  电压处理完成: 最终范围 [3.126, 3.317]V
+
+步骤5: 去噪效果验证与评估...
+  去噪效果评估指标:
+    SNR: 15.76 dB
+    RMSE: 0.0044
+    平滑度: 0.0031
+    残留尖峰数: 0
+  全图对比图已保存: processed_results\FC2\FC2_full_comparison.png
+
+步骤6: 保存处理后的数据为NPZ格式...
+  数据已保存至: processed_results\FC2\FC2_processed_data.npz
+  数据形状: (127370, 20)
+  包含特征: ['time', 'stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+
+======================================================================
+FC2 数据集处理完成!
+======================================================================
+
+所有数据集处理完成!
+处理结果已保存至: D:\pythonfile\PythonProject\processed_results
+
+进程已结束，退出代码为 0
+
+每行每列的属性你可以从以上给出的日志文件中获取，目前我还需要你根据我提供的重要性排序csv文件，为我增加gru模型的参数选择，并且删除重要性接近于0的列，使用有价值的数据，对电压有显著重要性的数据进行我gru模型pth文件的训练，注意，合理添加注释和日志，以便我后面对模型进行微调和修改，注意符合我整体prompt的要求，另外我把前两部分的代码文件也给你

@@ -1,0 +1,264 @@
+我来帮您按照要求修改代码。首先根据文件内容定位到具体行数：
+
+## 方案1：修复模型加载错误
+
+我找到了 `load_best_model` 方法，在文件的第 **1066行**：
+
+```python
+# 在 train.py 的第 1066行附近
+def load_best_model(self):
+    """加载最佳模型"""
+    model_path = os.path.join(self.config.save_paths['models'],
+                             'best_model.pth')
+
+    if os.path.exists(model_path):
+        checkpoint = torch.load(model_path, map_location=self.device)  # 第1066行
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.logger.log_info(f"已加载最佳模型 (epoch {checkpoint['epoch']})")
+    else:
+        self.logger.log_warning("最佳模型文件不存在")
+```
+
+**修改后**：
+```python
+def load_best_model(self):
+    """加载最佳模型"""
+    model_path = os.path.join(self.config.save_paths['models'],
+                             'best_model.pth')
+
+    if os.path.exists(model_path):
+        # 添加 weights_only=False 参数
+        checkpoint = torch.load(model_path, map_location=self.device, weights_only=False)  # 修改这一行
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.logger.log_info(f"已加载最佳模型 (epoch {checkpoint['epoch']})")
+    else:
+        self.logger.log_warning("最佳模型文件不存在")
+```
+
+## 方案2：优化模型训练稳定性
+
+### 1. 调整模型复杂度（在 `ModelConfig` 类中修改）
+
+在文件的第 **80-100行** 附近找到 `ModelConfig` 类的 GRU 模型参数部分：
+
+```python
+# ==================== GRU模型参数 ====================
+# 【作用】GRU隐藏层单元数，决定模型容量
+# 【默认值】128
+# 【修改建议】增大可提高模型表达能力，但可能过拟合；减小可降低复杂度
+gru_units: int = 128
+
+# 【作用】GRU层数，增加层数可学习更复杂的时序模式
+# 【默认值】2
+# 【修改建议】通常1-3层，层数过多可能导致梯度消失/爆炸
+gru_layers: int = 2
+
+# 【作用】输入层dropout，防止过拟合
+# 【默认值】0.1
+# 【修改建议】0.0-0.5，增大可增强正则化效果
+dropout: float = 0.1
+
+# 【作用】循环层dropout，防止RNN过拟合
+# 【默认值】0.1
+# 【修改建议】0.0-0.3，不宜过大以免影响梯度传播
+recurrent_dropout: float = 0.1
+
+# 【作用】是否使用双向GRU，从两个方向学习时序特征
+# 【默认值】True
+# 【修改建议】True可获取更全面的上下文信息，但参数翻倍
+bidirectional: bool = True
+```
+
+**修改后**：
+```python
+# ==================== GRU模型参数 ====================
+# 【作用】GRU隐藏层单元数，决定模型容量
+# 【默认值】64（从128降低）
+# 【修改建议】增大可提高模型表达能力，但可能过拟合；减小可降低复杂度
+gru_units: int = 64
+
+# 【作用】GRU层数，增加层数可学习更复杂的时序模式
+# 【默认值】1（从2降低）
+# 【修改建议】通常1-3层，层数过多可能导致梯度消失/爆炸
+gru_layers: int = 1
+
+# 【作用】输入层dropout，防止过拟合
+# 【默认值】0.2（从0.1升高）
+# 【修改建议】0.0-0.5，增大可增强正则化效果
+dropout: float = 0.2
+
+# 【作用】循环层dropout，防止RNN过拟合
+# 【默认值】0.2（从0.1升高）
+# 【修改建议】0.0-0.3，不宜过大以免影响梯度传播
+recurrent_dropout: float = 0.2
+
+# 【作用】是否使用双向GRU，从两个方向学习时序特征
+# 【默认值】False（从True改为False）
+# 【修改建议】True可获取更全面的上下文信息，但参数翻倍
+bidirectional: bool = False
+```
+
+### 2. 优化学习率策略（在 `ModelConfig` 类中修改）
+
+在文件的第 **110-130行** 附近找到训练参数部分：
+
+```python
+# ==================== 训练参数 ====================
+# 【作用】学习率，控制参数更新步长
+# 【默认值】0.001
+# 【修改建议】太大可能震荡，太小收敛慢；常用0.001, 0.0005, 0.0001
+learning_rate: float = 0.001
+
+# 【作用】早停耐心值，连续若干轮验证损失不改善则停止
+# 【默认值】30
+# 【修改建议】增大可给模型更多机会，但可能浪费计算资源
+patience: int = 30
+
+# 【作用】学习率衰减因子
+# 【默认值】0.5
+# 【修改建议】0.1-0.9，过大会导致学习率下降过快
+lr_decay_factor: float = 0.5
+```
+
+**修改后**：
+```python
+# ==================== 训练参数 ====================
+# 【作用】学习率，控制参数更新步长
+# 【默认值】0.0005（从0.001降低）
+# 【修改建议】太大可能震荡，太小收敛慢；常用0.001, 0.0005, 0.0001
+learning_rate: float = 0.0005
+
+# 【作用】早停耐心值，连续若干轮验证损失不改善则停止
+# 【默认值】20（从30降低）
+# 【修改建议】增大可给模型更多机会，但可能浪费计算资源
+patience: int = 20
+
+# 【作用】学习率衰减因子
+# 【默认值】0.8（从0.5升高）
+# 【修改建议】0.1-0.9，过大会导致学习率下降过快
+lr_decay_factor: float = 0.8
+```
+
+### 3. 修复损失函数数值稳定性
+
+找到 `GRUTrainer` 类的 `train_epoch` 方法，在文件的第 **690行** 附近：
+
+```python
+def train_epoch(self, train_loader: DataLoader) -> Tuple[float, Dict[str, float]]:
+    """执行单个epoch的训练"""
+    self.model.train()
+    total_loss = 0
+    all_preds = []
+    all_targets = []
+
+    for sequences, targets in train_loader:
+        # 移动到设备
+        sequences = sequences.to(self.device)
+        targets = targets.to(self.device)
+
+        # 清零梯度
+        self.optimizer.zero_grad()
+
+        # 前向传播
+        mean_pred, std_pred = self.model(sequences)
+
+        # 计算损失
+        loss = self.criterion(mean_pred, std_pred, targets)  # 这里需要添加截断
+
+        # 反向传播和优化
+        loss.backward()
+        self.optimizer.step()
+
+        # 记录
+        total_loss += loss.item()
+        all_preds.append(mean_pred.detach().cpu())
+        all_targets.append(targets.detach().cpu())
+```
+
+**修改后**：
+```python
+def train_epoch(self, train_loader: DataLoader) -> Tuple[float, Dict[str, float]]:
+    """执行单个epoch的训练"""
+    self.model.train()
+    total_loss = 0
+    all_preds = []
+    all_targets = []
+
+    for sequences, targets in train_loader:
+        # 移动到设备
+        sequences = sequences.to(self.device)
+        targets = targets.to(self.device)
+
+        # 清零梯度
+        self.optimizer.zero_grad()
+
+        # 前向传播
+        mean_pred, std_pred = self.model(sequences)
+        
+        # 添加标准差截断，防止数值爆炸
+        std_pred = torch.clamp(std_pred, min=1e-6)  # 新增行：限制标准差≥1e-6
+
+        # 计算损失
+        loss = self.criterion(mean_pred, std_pred, targets)
+
+        # 反向传播和优化
+        loss.backward()
+        self.optimizer.step()
+
+        # 记录
+        total_loss += loss.item()
+        all_preds.append(mean_pred.detach().cpu())
+        all_targets.append(targets.detach().cpu())
+```
+
+### 4. 数据标准化（已在代码中实现）
+
+我检查了您的代码，发现数据标准化已经在 `DataProcessor` 类的 `create_sequences` 方法中实现了：
+
+```python
+def create_sequences(self, data: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    创建时序序列
+    """
+    self.logger.log_info(f"创建时序序列，窗口长度: {self.config.sequence_length}")
+
+    # 分离特征和目标
+    X = data.drop(columns=[self.config.target_feature]).values
+    y = data[self.config.target_feature].values.reshape(-1, 1)
+
+    # 标准化 - 这里已经使用了StandardScaler
+    X_scaled = self.scaler_X.fit_transform(X)  # 使用StandardScaler
+    y_scaled = self.scaler_y.fit_transform(y)  # 使用StandardScaler
+
+    # 创建序列
+    sequences = []
+    targets = []
+
+    for i in range(len(X_scaled) - self.config.sequence_length):
+        seq = X_scaled[i:i + self.config.sequence_length]
+        target = y_scaled[i + self.config.sequence_length - 1]
+
+        sequences.append(seq)
+        targets.append(target)
+
+    sequences = np.array(sequences)
+    targets = np.array(targets)
+
+    self.logger.log_info(f"序列创建完成: {sequences.shape[0]} 个序列")
+
+    return sequences, targets
+```
+
+数据标准化已经正确实现，使用了 `StandardScaler` 对特征和目标都进行了 Z-score 标准化。
+
+## 修改总结
+
+我已经帮您完成了所有要求的修改：
+
+1. ✅ **模型加载错误修复**：在 `load_best_model` 方法中添加了 `weights_only=False` 参数
+2. ✅ **模型复杂度调整**：降低 GRU 单元数、层数，提高 dropout，关闭双向 GRU
+3. ✅ **学习率策略优化**：降低学习率，调整衰减因子，提前早停
+4. ✅ **损失函数数值稳定性**：在前向传播后添加了标准差截断
+5. ✅ **数据标准化**：确认代码已经正确实现了 StandardScaler 标准化
+
+这些修改应该能有效解决您遇到的模型加载错误和训练稳定性问题。建议您按照这个修改重新运行训练。

@@ -1,0 +1,201 @@
+D:\pythonfile\PythonProject\.venv\Scripts\python.exe D:\pythonfile\PythonProject\test_npz.py 
+
+============================================================
+Starting Full Analysis: FC1
+============================================================
+
+============================================================
+开始检测 FC1 NPZ 文件
+文件路径: processed_results/FC1/FC1_processed_20251206_215017.npz
+============================================================
+NPZ文件中包含的键: ['time', 'stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+检测到特征分离格式（每个特征是一个一维数组）
+
+步骤1: 数据基本信息
+  数据形状: (143862, 20)
+  样本数量: 143,862
+  特征数量: 20
+  特征名称: ['time', 'stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+  DataFrame形状: (143862, 20)
+
+步骤2: 数据基本统计信息
+  分析的数值特征数量: 19
+
+  各特征统计摘要:
+    stack_voltage:
+      范围: [3.1963, 3.3594]
+      均值: 3.2701 ± 0.0425
+      缺失值: 0 (0.0%)
+    current_density:
+      范围: [0.7013, 0.7033]
+      均值: 0.7024 ± 0.0005
+      缺失值: 0 (0.0%)
+    current:
+      范围: [70.1333, 70.3334]
+      均值: 70.2360 ± 0.0471
+      缺失值: 0 (0.0%)
+    hydrogen_inlet_temp:
+      范围: [27.0915, 28.5983]
+      均值: 27.8729 ± 0.3601
+      缺失值: 0 (0.0%)
+    hydrogen_outlet_temp:
+      范围: [40.3562, 42.0397]
+      均值: 41.1953 ± 0.2828
+      缺失值: 0 (0.0%)
+
+  🔋 电压专项检查:
+      电压范围: [3.196, 3.359] V
+      电压均值: 3.270 ± 0.043 V
+      电压范围状态: ✓ 正常
+
+步骤3: 异常值检测
+    current_density: 20410 个异常值 (14.19%)
+    current: 20410 个异常值 (14.19%)
+    hydrogen_inlet_temp: 15878 个异常值 (11.04%)
+    hydrogen_outlet_temp: 7630 个异常值 (5.30%)
+    air_inlet_temp: 5201 个异常值 (3.62%)
+    air_outlet_temp: 8325 个异常值 (5.79%)
+    coolant_inlet_temp: 2981 个异常值 (2.07%)
+    coolant_outlet_temp: 4605 个异常值 (3.20%)
+    air_inlet_pressure: 473 个异常值 (0.33%)
+
+步骤4: 数据可视化
+  Saved time series plot: npz_visualization_fixed/FC1_time_series.png
+  Saved voltage analysis plot: npz_visualization_fixed/FC1_voltage_analysis.png
+  Saved correlation heatmap: npz_visualization_fixed/FC1_correlation_heatmap.png
+  All plots saved to: npz_visualization_fixed/
+
+步骤5: 数据质量评估
+  Missing values check:
+    Total missing values: 0
+    Missing percentage: 0.0000%
+    ✓ No missing values
+  Duplicates check:
+    Duplicate rows: 0
+    Duplicate percentage: 0.0000%
+    ✓ No duplicate rows
+  Voltage range check:
+    Min voltage: 3.196 V
+    Max voltage: 3.359 V
+    ✓ Voltage range normal (3.0-3.5V)
+
+  📊 Data Quality Score: 100/100
+  ✅ Excellent data quality
+  Saved quality report: npz_visualization_fixed/FC1_quality_report.txt
+
+============================================================
+FC1 NPZ file analysis completed!
+============================================================
+
+============================================================
+Starting Full Analysis: FC2
+============================================================
+
+============================================================
+开始检测 FC2 NPZ 文件
+文件路径: processed_results/FC2/FC2_processed_20251206_215047.npz
+============================================================
+NPZ文件中包含的键: ['time', 'stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+检测到特征分离格式（每个特征是一个一维数组）
+
+步骤1: 数据基本信息
+  数据形状: (127370, 20)
+  样本数量: 127,370
+  特征数量: 20
+  特征名称: ['time', 'stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+  DataFrame形状: (127370, 20)
+
+步骤2: 数据基本统计信息
+  分析的数值特征数量: 19
+
+  各特征统计摘要:
+    stack_voltage:
+      范围: [3.1287, 3.3160]
+      均值: 3.2173 ± 0.0420
+      缺失值: 0 (0.0%)
+    current_density:
+      范围: [0.7002, 0.7011]
+      均值: 0.7007 ± 0.0002
+      缺失值: 0 (0.0%)
+    current:
+      范围: [70.0206, 70.1079]
+      均值: 70.0662 ± 0.0219
+      缺失值: 0 (0.0%)
+    hydrogen_inlet_temp:
+      范围: [24.0059, 29.6277]
+      均值: 27.2705 ± 1.9652
+      缺失值: 0 (0.0%)
+    hydrogen_outlet_temp:
+      范围: [35.9808, 41.3845]
+      均值: 38.6476 ± 0.6831
+      缺失值: 0 (0.0%)
+
+  🔋 电压专项检查:
+      电压范围: [3.129, 3.316] V
+      电压均值: 3.217 ± 0.042 V
+      电压范围状态: ✓ 正常
+
+步骤3: 异常值检测
+    stack_voltage: 1185 个异常值 (0.93%)
+    current_density: 29 个异常值 (0.02%)
+    current: 29 个异常值 (0.02%)
+    hydrogen_outlet_temp: 290 个异常值 (0.23%)
+    air_outlet_temp: 708 个异常值 (0.56%)
+    coolant_inlet_temp: 1056 个异常值 (0.83%)
+    coolant_outlet_temp: 4519 个异常值 (3.55%)
+    air_inlet_pressure: 565 个异常值 (0.44%)
+
+步骤4: 数据可视化
+  Saved time series plot: npz_visualization_fixed/FC2_time_series.png
+  Saved voltage analysis plot: npz_visualization_fixed/FC2_voltage_analysis.png
+  Saved correlation heatmap: npz_visualization_fixed/FC2_correlation_heatmap.png
+  All plots saved to: npz_visualization_fixed/
+
+步骤5: 数据质量评估
+  Missing values check:
+    Total missing values: 0
+    Missing percentage: 0.0000%
+    ✓ No missing values
+  Duplicates check:
+    Duplicate rows: 0
+    Duplicate percentage: 0.0000%
+    ✓ No duplicate rows
+  Voltage range check:
+    Min voltage: 3.129 V
+    Max voltage: 3.316 V
+    ✓ Voltage range normal (3.0-3.5V)
+
+  📊 Data Quality Score: 100/100
+  ✅ Excellent data quality
+  Saved quality report: npz_visualization_fixed/FC2_quality_report.txt
+
+============================================================
+FC2 NPZ file analysis completed!
+============================================================
+
+============================================================
+Comprehensive Analysis Report
+============================================================
+
+FC1:
+  Samples: 143,862
+  Features: 20
+  Missing Values: 0
+  Duplicate Rows: 0
+  Quality Score: 100/100
+  Rating: Excellent
+
+FC2:
+  Samples: 127,370
+  Features: 20
+  Missing Values: 0
+  Duplicate Rows: 0
+  Quality Score: 100/100
+  Rating: Excellent
+
+============================================================
+All NPZ files analysis completed!
+Visualization results saved to: npz_visualization_fixed/
+============================================================
+
+进程已结束，退出代码为 0

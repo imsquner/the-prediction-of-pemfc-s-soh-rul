@@ -1,0 +1,211 @@
+D:\pythonfile\PythonProject\.venv\Scripts\python.exe D:\pythonfile\PythonProject\pemfc_catboost_analysis.py 
+
+================================================================================
+PEMFC Monitoring Parameter Importance Analysis Based on CatBoost - Starting Execution
+================================================================================
+
+================================================================================
+PEMFC Monitoring Parameter Importance Analysis Based on CatBoost
+Implementation of Chapter 3 Method
+================================================================================
+
+[Stage 1] Data Loading and Preprocessing
+----------------------------------------
+======================================================================
+Data Loading and Preprocessing
+======================================================================
+Loading: FC1_Ageing_part1.csv
+  Trying encoding: utf-8
+  ✗ Encoding utf-8 failed: 'utf-8' codec can't decode byte 0xb2 in position 6...
+  Trying encoding: gbk
+  ✗ Encoding gbk failed: 'gbk' codec can't decode byte 0xb2 in position 60:...
+  Trying encoding: gb2312
+  ✗ Encoding gb2312 failed: 'gb2312' codec can't decode byte 0xb2 in position ...
+  Trying encoding: gb18030
+  ✗ Encoding gb18030 failed: 'gb18030' codec can't decode byte 0xb2 in position...
+  Trying encoding: latin1
+  ✓ Successfully read file with latin1 encoding
+  Renamed 20 columns
+  Removed column: U1 (V) (individual cell voltage)
+  Removed column: U2 (V) (individual cell voltage)
+  Removed column: U3 (V) (individual cell voltage)
+  Removed column: U4 (V) (individual cell voltage)
+  Removed column: U5 (V) (individual cell voltage)
+  Removed 5 individual cell voltage columns
+  Loading complete: 65535 rows, 20 columns
+Loading: FC1_Ageing_part2.csv
+  Trying encoding: utf-8
+  ✗ Encoding utf-8 failed: 'utf-8' codec can't decode byte 0xb2 in position 6...
+  Trying encoding: gbk
+  ✗ Encoding gbk failed: 'gbk' codec can't decode byte 0xb2 in position 60:...
+  Trying encoding: gb2312
+  ✗ Encoding gb2312 failed: 'gb2312' codec can't decode byte 0xb2 in position ...
+  Trying encoding: gb18030
+  ✗ Encoding gb18030 failed: 'gb18030' codec can't decode byte 0xb2 in position...
+  Trying encoding: latin1
+  ✓ Successfully read file with latin1 encoding
+  Renamed 20 columns
+  Removed column: U1 (V) (individual cell voltage)
+  Removed column: U2 (V) (individual cell voltage)
+  Removed column: U3 (V) (individual cell voltage)
+  Removed column: U4 (V) (individual cell voltage)
+  Removed column: U5 (V) (individual cell voltage)
+  Removed 5 individual cell voltage columns
+  Loading complete: 65535 rows, 20 columns
+Loading: FC1_Ageing_part3.csv
+  Trying encoding: utf-8
+  ✗ Encoding utf-8 failed: 'utf-8' codec can't decode byte 0xb2 in position 6...
+  Trying encoding: gbk
+  ✗ Encoding gbk failed: 'gbk' codec can't decode byte 0xb2 in position 60:...
+  Trying encoding: gb2312
+  ✗ Encoding gb2312 failed: 'gb2312' codec can't decode byte 0xb2 in position ...
+  Trying encoding: gb18030
+  ✗ Encoding gb18030 failed: 'gb18030' codec can't decode byte 0xb2 in position...
+  Trying encoding: latin1
+  ✓ Successfully read file with latin1 encoding
+  Renamed 20 columns
+  Removed column: U1 (V) (individual cell voltage)
+  Removed column: U2 (V) (individual cell voltage)
+  Removed column: U3 (V) (individual cell voltage)
+  Removed column: U4 (V) (individual cell voltage)
+  Removed column: U5 (V) (individual cell voltage)
+  Removed 5 individual cell voltage columns
+  Loading complete: 12792 rows, 20 columns
+
+Data merging complete: 143862 rows, 20 columns
+
+Data Preprocessing...
+  1. Missing value processing...
+  2. Min-Max normalization...
+  Normalized 18 features
+  3. Data restructuring...
+    Input feature dimension: (143862, 18)
+    Target variable dimension: (143862,)
+  4. Dataset splitting...
+    Training set: 100703 samples
+    Validation set: 21579 samples
+    Test set: 21580 samples
+
+Data Basic Information:
+  Total samples: 143862
+  Number of features: 18
+  Feature list: ['current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+  Target variable statistics:
+    Minimum: 3.0930 V
+    Maximum: 3.3650 V
+    Mean: 3.2700 V
+    Standard deviation: 0.0427 V
+
+[Stage 2] CatBoost Feature Importance Analysis
+----------------------------------------
+
+======================================================================
+CatBoost Feature Importance Analysis
+======================================================================
+
+Training CatBoost model...
+
+Model Evaluation Results (Validation Set):
+  Mean Absolute Error (MAE): 0.0430 V
+  Root Mean Square Error (RMSE): 0.0476 V
+  Coefficient of Determination (R²): -16.3598
+
+Calculating feature importance...
+
+Feature Importance Ranking:
+--------------------------------------------------------------------------------
+Rank  Feature                   Importance   Percent(%)   Cumulative(%)
+--------------------------------------------------------------------------------
+1     air_outlet_flow           48.6635      48.66        48.66       
+2     hydrogen_inlet_temp       19.7558      19.76        68.42       
+3     current                   9.4025       9.40         77.82       
+4     coolant_flow              7.3727       7.37         85.19       
+5     current_density           6.9321       6.93         92.12       
+6     air_outlet_pressure       3.1932       3.19         95.31       
+7     coolant_inlet_temp        3.0217       3.02         98.33       
+8     air_inlet_pressure        0.9303       0.93         99.26       
+9     hydrogen_outlet_temp      0.4440       0.44         99.70       
+10    hydrogen_inlet_flow       0.1647       0.16         99.86       
+11    air_outlet_temp           0.0847       0.08         99.94       
+12    hydrogen_outlet_flow      0.0348       0.03         99.97       
+13    coolant_outlet_temp       0.0000       0.00         99.97       
+14    air_inlet_temp            0.0000       0.00         99.97       
+15    hydrogen_outlet_pressure  0.0000       0.00         99.97       
+16    hydrogen_inlet_pressure   0.0000       0.00         99.97       
+17    air_inlet_flow            0.0000       0.00         99.97       
+18    air_inlet_humidity        0.0000       0.00         99.97       
+
+[Stage 3] Key Parameter Selection
+----------------------------------------
+Features selected based on cumulative importance > 90.0%: 4 features
+Feature list: ['air_outlet_flow', 'hydrogen_inlet_temp', 'current', 'coolant_flow']
+
+[Stage 4] Visualization
+----------------------------------------
+
+======================================================================
+Generating Visualization Charts
+======================================================================
+
+Generating Chart 1: Feature Importance Bar Chart...
+  Chart 1 saved: catboost_results\feature_importance_20251206_195332.png
+
+Generating Chart 2: Cumulative Importance Curve...
+  Chart 2 saved: catboost_results\cumulative_importance_20251206_195332.png
+
+Generating Chart 3: Stack Voltage Time Series...
+  Chart 3 saved: catboost_results\voltage_timeseries_20251206_195332.png
+
+[Stage 5] Result Saving and Report Generation
+----------------------------------------
+
+======================================================================
+Saving Analysis Results and Generating Report
+======================================================================
+  Feature importance results saved to: catboost_results\feature_importance_results_20251206_195333.csv
+  Detailed analysis report saved to: catboost_results\analysis_report_20251206_195333.txt
+
+Key Conclusions:
+----------------------------------------
+1. Most important monitoring parameter: air_outlet_flow (48.7%)
+2. Cumulative importance of top 5 features: 92.1%
+3. Recommended parameters for prediction model (based on paper):
+   1. Time
+   2. Stack Voltage
+   3. Current
+   4. Current Density
+   5. Hydrogen Inlet Temperature
+   6. Coolant Flow
+   7. Air Outlet Flow
+
+4. Note: U1-U5 individual cell voltage columns have been excluded from analysis
+   (their sum equals stack voltage, which would cause information leakage).
+
+================================================================================
+Analysis Complete!
+================================================================================
+
+Generated Files:
+  1. Feature importance results (CSV): catboost_results\feature_importance_results_20251206_195333.csv
+  2. Detailed analysis report (TXT): catboost_results\analysis_report_20251206_195333.txt
+  3. Visualization chart (PNG): catboost_results\feature_importance_20251206_195332.png
+  4. Visualization chart (PNG): catboost_results\cumulative_importance_20251206_195332.png
+  5. Visualization chart (PNG): catboost_results\voltage_timeseries_20251206_195332.png
+
+Paper Key Findings Verification:
+----------------------------------------
+Paper Figure 3.9 shows air outlet flow as the most important parameter.
+In our analysis:
+  Air outlet flow rank: #1 (48.7%)
+  ✓ Consistent with paper conclusion
+
+Note: U1-U5 individual cell voltage columns have been excluded from analysis
+      (their sum equals stack voltage, which would cause information leakage).
+
+Next Steps Recommendations:
+  1. Build performance degradation prediction model using selected key parameters
+  2. Validate model performance on different datasets
+  3. Combine with mechanistic analysis to explain physical reasons behind parameter importance
+  4. Consider time series characteristics in model design
+
+进程已结束，退出代码为 0
