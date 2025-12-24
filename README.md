@@ -83,6 +83,3 @@ $env:EVAL_ONLY="1"; D:/pythonfile/123/.venv/Scripts/python.exe d:/pythonfile/123
 
 ## 许可证与引用
 本仓库未声明许可证。若用于学术/工程，请在成果中注明“PEMFC-Integrated GRU Prognostics Toolkit”。
-
----
-如需生成 FC2 多情景（乐观/中性/保守）未来与 RUL 区间，请提出需求，我可补充实现并更新报告输出。
