@@ -1,14 +1,14 @@
 ============================================================
 NPZ Data Quality Report - FC2
-Report Time: 2025-12-12 05:15:23
+Report Time: 2026-04-20 12:20:56
 ============================================================
 
 1. Basic Information
     Dataset: FC2
-    File Path: processed_results\FC2\FC2_processed_20251209_002355.npz
+    File Path: processed_results\FC2\FC2_processed_20260420_122035.npz
     Samples: 127,370
     Features: 20
-    Feature List: ['time', 'stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+    Feature List: ['time', 'stack_voltage', 'J (A/cm²)', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
 
 2. Data Quality Checks
     Missing Values: 0 (0.0000%)

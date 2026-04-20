@@ -1,14 +1,14 @@
 ============================================================
 NPZ Data Quality Report - FC1
-Report Time: 2025-12-12 05:15:21
+Report Time: 2026-04-20 12:20:55
 ============================================================
 
 1. Basic Information
     Dataset: FC1
-    File Path: processed_results\FC1\FC1_processed_20251209_200621.npz
+    File Path: processed_results\FC1\FC1_processed_20260420_122002.npz
     Samples: 143,862
-    Features: 20
-    Feature List: ['time', 'stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+    Features: 21
+    Feature List: ['time', 'stack_voltage', 'J (A/cm²)', 'current', 'iTnH2 (°C)', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity', 'hydrogen_inlet_temp']
 
 2. Data Quality Checks
     Missing Values: 0 (0.0000%)

@@ -1,0 +1,38 @@
+{
+    "experiment_info": {
+        "name": "gru_pemfc_paper_experiment_fixed_r2_rul",
+        "start_time": "2026-04-20 12:41:55",
+        "device": "cuda"
+    },
+    "model_config": {
+        "gru_hidden_size": 256,
+        "gru_num_layers": 2,
+        "dropout_rate": 0.1,
+        "bidirectional": false,
+        "sequence_length": 80,
+        "batch_size": 32,
+        "learning_rate": 0.0006
+    },
+    "training_results": {
+        "best_epoch": 1,
+        "best_val_loss": 0.027158395837537746,
+        "training_time": "1199.7 秒"
+    },
+    "test_metrics": {
+        "MAE": 0.003389,
+        "RMSE": 0.004518,
+        "MAPE": 0.10507,
+        "R2": 0.574405
+    },
+    "rul_metrics": {
+        "MAE_RUL": 100.99,
+        "MAPE_RUL": 15.32,
+        "PHM_Score": 2363.1544
+    },
+    "rul_details": {
+        "true_rul": 659.2253649868051,
+        "pred_rul": 760.2116489119328,
+        "true_V_initial": 3.2228091207703593,
+        "pred_V_initial": 3.222809120794788
+    }
+}

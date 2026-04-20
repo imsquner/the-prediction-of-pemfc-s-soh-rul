@@ -1,6 +1,6 @@
 ============================================================
 CSV Raw Data Quality Report - FC1_Raw
-Report Time: 2025-12-11 00:13:35
+Report Time: 2026-04-20 12:19:04
 ============================================================
 
 1. Basic Information
@@ -8,11 +8,11 @@ Report Time: 2025-12-11 00:13:35
     Folder Path: data
     CSV Files: ['FC1_Ageing_part1.csv', 'FC1_Ageing_part2.csv', 'FC1_Ageing_part3.csv']
     Total Samples: 143,862
-    Features: 21
-    Feature List: ['time', 'stack_voltage', 'J_A_cm2', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity', 'file_source']
+    Features: 22
+    Feature List: ['time', 'stack_voltage', 'J_A_cm2', 'current', 'iTnH2_C', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity', 'file_source', 'hydrogen_inlet_temp']
 
 2. Data Quality Checks
-    Missing Values: 0 (0.0000%)
+    Missing Values: 143862 (4.5455%)
     Duplicate Rows: 0 (0.0000%)
 
     Voltage Statistics:
@@ -23,10 +23,10 @@ Report Time: 2025-12-11 00:13:35
         Range: 0.272 V
 
 3. Quality Score
-    Overall Quality Score: 100/100
+    Overall Quality Score: 80/100
 
 4. Recommendations
-    Excellent raw data quality, ready for preprocessing.
+    Good raw data quality, suitable for preprocessing with minor adjustments.
 
 ============================================================
 Raw Data Analysis Complete

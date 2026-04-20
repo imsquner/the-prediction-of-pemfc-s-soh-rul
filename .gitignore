@@ -13,3 +13,6 @@ processed_data_*.npz
 predictions/
 best_gru_model_*.pth
 
+/txt
+/txt
+/txt

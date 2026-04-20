@@ -813,6 +813,20 @@ class DataProcessor:
                 if 'time' not in features_to_keep:
                     features_to_keep.append('time')
 
+            # 兼容历史/跨数据集特征命名，尽量复用语义一致列避免推理中断
+            feature_aliases = {
+                "iTnH2 (°C)": ["hydrogen_inlet_temp"]
+            }
+            for expected_feature, alias_candidates in feature_aliases.items():
+                if expected_feature in features_to_keep and expected_feature not in data.columns:
+                    for alias in alias_candidates:
+                        if alias in data.columns:
+                            data[expected_feature] = data[alias]
+                            self.logger.log_warning(
+                                f"特征 '{expected_feature}' 缺失，已使用别名列 '{alias}' 进行回退"
+                            )
+                            break
+
             # 只保留存在的特征
             existing_features = [f for f in features_to_keep if f in data.columns]
             missing_features = [f for f in features_to_keep if f not in data.columns]
@@ -839,8 +853,10 @@ class DataProcessor:
 
         except Exception as e:
             self.logger.log_error(f"数据加载和处理失败: {str(e)}")
-            import traceback
-            self.logger.log_error(traceback.format_exc())
+            # 对可预期的数据校验错误仅保留简洁日志，避免干扰主流程阅读
+            if not isinstance(e, ValueError):
+                import traceback
+                self.logger.log_error(traceback.format_exc())
             raise
 
     def apply_wavelet_denoising(self, data: pd.DataFrame) -> pd.DataFrame:
