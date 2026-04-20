@@ -8,7 +8,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import pywt  # 小波变换库
+import pywt  # pyright: ignore[reportMissingImports]  # 小波变换库
 import warnings
 from datetime import datetime
 from scipy.signal import savgol_filter, medfilt
@@ -652,7 +652,7 @@ def check_and_fix_voltage_range(df, voltage_col='stack_voltage'):
         fixed_max = df[voltage_col].max()
         print(f"    修复后电压范围: [{fixed_min:.3f}, {fixed_max:.3f}]V")
     else:
-        print(f"    电压范围正常，无需修复")
+        print("    电压范围正常，无需修复")
 
     return df, stats
 
@@ -685,10 +685,10 @@ def load_and_merge_data(data_path, dataset_name="FC1"):
 
             try:
                 df = pd.read_csv(file_path, encoding='utf-8')
-            except:
+            except Exception:
                 try:
                     df = pd.read_csv(file_path, encoding='gbk')
-                except:
+                except Exception:
                     try:
                         df = pd.read_csv(file_path, encoding='ISO-8859-1')
                     except Exception as e:
@@ -824,8 +824,6 @@ def preprocess_basic(df):
 
     for col in numeric_cols:
         if df_clean[col].isna().sum() > 0:
-            original_missing = df_clean[col].isna().sum()
-
             df_clean[col], filled_count = enhanced_missing_value_fill(df_clean, col)
 
             remaining_missing = df_clean[col].isna().sum()
@@ -915,13 +913,13 @@ def process_all_columns_with_adaptive_filtering(df):
 
             # 3. 特殊处理配置（针对特定类型的列）
             if col in PROCESSING_CONFIG['key_columns']:
-                print(f"    关键列，应用增强处理")
+                print("    关键列，应用增强处理")
             elif col in PROCESSING_CONFIG['special_treatment_columns'].get('temperature_columns', []):
-                print(f"    温度列，应用温度数据处理策略")
+                print("    温度列，应用温度数据处理策略")
             elif col in PROCESSING_CONFIG['special_treatment_columns'].get('pressure_columns', []):
-                print(f"    压力列，应用压力数据处理策略")
+                print("    压力列，应用压力数据处理策略")
             elif col in PROCESSING_CONFIG['special_treatment_columns'].get('flow_columns', []):
-                print(f"    流量列，应用流量数据处理策略")
+                print("    流量列，应用流量数据处理策略")
 
             # 4. 多阶段滤波
             print(f"    滤波参数: 中值窗口={filter_params['median_window']}, "

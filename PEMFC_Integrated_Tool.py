@@ -1,5 +1,4 @@
 import sys
-import os
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QStackedWidget)
 from PyQt6.QtGui import QFont
 from gui.ui_components import NavigationBar, MonitorPanel

@@ -459,7 +459,12 @@ def plot_raw_views(csv_path: str, dataset_label: str = "FC1", max_signals: int =
 
 
 def plot_prediction_vs_true(pred_csv_path: str, max_points: int = 1500, dataset_label: str = "FC1"):
-    """预测值对比真值，可选截断长度（用于FC2较短时间轴）"""
+    """预测值对比真值。
+
+    - FC1：支持历史/测试/未来滚动预测的常规展示。
+    - FC2：如检测到 50:50 分割（split 包含 fc2_first_half / fc2_second_half），
+      则前50%仅绘制真实值，后50%绘制真实+预测，并在分割处加竖线；标题显示真实/预测RUL。
+    """
     try:
         plt.rcParams["font.family"] = ["SimHei", "Microsoft YaHei", "sans-serif"]
         plt.rcParams["axes.unicode_minus"] = False
@@ -501,66 +506,124 @@ def plot_prediction_vs_true(pred_csv_path: str, max_points: int = 1500, dataset_
         target_series = plot_df["target"].to_numpy()
         pred_series = plot_df["prediction"].to_numpy()
 
-        # 标记未来滚动预测（split包含future 或 target缺失）
-        if "split" in plot_df.columns:
-            future_mask = plot_df["split"].str.contains("future", case=False, na=False).to_numpy()
+        # FC2：特殊逻辑（50:50 显示）
+        is_fc2_half = (dataset_label.upper() == "FC2") and ("split" in plot_df.columns) and (
+            plot_df["split"].str.contains("fc2_first_half|fc2_second_half", case=False, regex=True).any()
+        )
+
+        if is_fc2_half:
+            # 分段数据
+            first_mask = plot_df["split"].str.contains("fc2_first_half", case=False, na=False).to_numpy()
+            second_mask = plot_df["split"].str.contains("fc2_second_half", case=False, na=False).to_numpy()
+
+            # 边界时间
+            boundary_time = None
+            if "time" in plot_df.columns:
+                times = plot_df["time"].to_numpy()
+                if np.any(first_mask):
+                    boundary_time = float(np.nanmax(times[first_mask]))
+
+            # 前半段：仅真实
+            ax.plot(x_axis[first_mask], target_series[first_mask], label="真实(前50%)",
+                    color="#165DFF", linewidth=1.8)
+            if boundary_time is not None:
+                ax.axvline(boundary_time, color="#86909C", linestyle='--', linewidth=1.2, alpha=0.8, label="分割线")
+
+            # 后半段：真实 + 预测
+            ax.plot(x_axis[second_mask], target_series[second_mask], label="真实(后50%)",
+                    color="#165DFF", linewidth=1.5, alpha=0.7)
+            ax.plot(x_axis[second_mask], pred_series[second_mask], label="预测(后50%)",
+                    color="#F53F3F", linewidth=1.8, linestyle='--')
+
+            # RUL（真实用全序列，预测用后半段）
+            rul_info_lines = []
+            true_thr, true_eol, true_rul = _estimate_rul_from_series(x_axis[~np.isnan(target_series)],
+                                        target_series[~np.isnan(target_series)])
+            pred_thr, pred_eol, pred_rul = _estimate_rul_from_series(x_axis[second_mask], pred_series[second_mask])
+            if true_eol is not None:
+                ax.axvline(true_eol, color="#165DFF", linestyle=":", alpha=0.7, linewidth=1.2,
+                           label=f"真实EOL≈{true_eol:.1f}h")
+                rul_info_lines.append(f"真实RUL≈{true_rul:.1f}h @EOL≈{true_eol:.1f}h")
+            if pred_eol is not None:
+                ax.axvline(pred_eol, color="#F53F3F", linestyle=":", alpha=0.7, linewidth=1.2,
+                           label=f"预测EOL≈{pred_eol:.1f}h")
+                rul_info_lines.append(f"预测RUL≈{pred_rul:.1f}h @EOL≈{pred_eol:.1f}h")
+
+            rul_txt = " | ".join(rul_info_lines) if rul_info_lines else "RUL不可用"
+            ax.set_title(f"FC2 50:50 预测对比 | {rul_txt}", fontsize=14, fontweight="bold", color="#1D2129")
         else:
-            future_mask = np.isnan(target_series)
-        known_mask = ~future_mask
+            # 常规逻辑（FC1 或 FC2 无分割数据）：含未来滚动预测
+            if "split" in plot_df.columns:
+                future_mask = plot_df["split"].str.contains("future", case=False, na=False).to_numpy()
+            else:
+                future_mask = np.isnan(target_series)
+            known_mask = ~future_mask
 
-        # 已知区间
-        ax.plot(x_axis[known_mask], target_series[known_mask], label="真实值", color="#165DFF", linewidth=1.8)
-        ax.plot(x_axis[known_mask], pred_series[known_mask], label="预测值(已知)", color="#F53F3F", linewidth=1.8, linestyle='--')
+            ax.plot(x_axis[known_mask], target_series[known_mask], label="真实值", color="#165DFF", linewidth=1.8)
+            ax.plot(x_axis[known_mask], pred_series[known_mask], label="预测值(已知)", color="#F53F3F", linewidth=1.8, linestyle='--')
+            if future_mask.any():
+                ax.plot(x_axis[future_mask], pred_series[future_mask], label="滚动预测(未来)",
+                        color="#00B42A", linestyle=':', linewidth=1.6, alpha=0.9)
 
-        # 未来滚动预测区间
-        if future_mask.any():
-            ax.plot(x_axis[future_mask], pred_series[future_mask], label="滚动预测(未来)",
-                    color="#00B42A", linestyle=':', linewidth=1.6, alpha=0.9)
+            # 置信区间可选（仅对已知区间）
+            if "ci_lower" in plot_df.columns and "ci_upper" in plot_df.columns:
+                ax.fill_between(x_axis[known_mask], plot_df.loc[known_mask, "ci_lower"], plot_df.loc[known_mask, "ci_upper"],
+                                color="#F53F3F", alpha=0.15, label="95% 置信区间")
 
-        # 置信区间可选（仅对已知区间）
-        if "ci_lower" in plot_df.columns and "ci_upper" in plot_df.columns:
-            ax.fill_between(x_axis[known_mask], plot_df.loc[known_mask, "ci_lower"], plot_df.loc[known_mask, "ci_upper"],
-                            color="#F53F3F", alpha=0.15, label="95% 置信区间")
+            valid_mask = known_mask & ~np.isnan(target_series) & ~np.isnan(pred_series)
+            if valid_mask.any():
+                mae = float(np.mean(np.abs(target_series[valid_mask] - pred_series[valid_mask])))
+                rmse = float(np.sqrt(np.mean((target_series[valid_mask] - pred_series[valid_mask]) ** 2)))
+                metrics_txt = f"MAE={mae:.4f}, RMSE={rmse:.4f}"
+            else:
+                metrics_txt = "MAE=NA, RMSE=NA"
 
-        # 计算指标（仅已知区间）
-        valid_mask = known_mask & ~np.isnan(target_series) & ~np.isnan(pred_series)
-        if valid_mask.any():
-            mae = float(np.mean(np.abs(target_series[valid_mask] - pred_series[valid_mask])))
-            rmse = float(np.sqrt(np.mean((target_series[valid_mask] - pred_series[valid_mask]) ** 2)))
-            metrics_txt = f"MAE={mae:.4f}, RMSE={rmse:.4f}"
-        else:
-            metrics_txt = "MAE=NA, RMSE=NA"
+            rul_info_lines = []
+            true_thr, true_eol, true_rul = _estimate_rul_from_series(x_axis[~np.isnan(target_series)],
+                                        target_series[~np.isnan(target_series)])
+            pred_thr, pred_eol, pred_rul = _estimate_rul_from_series(x_axis[~np.isnan(pred_series)],
+                                        pred_series[~np.isnan(pred_series)])
+            if true_eol is not None:
+                ax.axvline(true_eol, color="#165DFF", linestyle=":", alpha=0.7, linewidth=1.3,
+                           label=f"真实EOL≈{true_eol:.1f}h")
+                rul_info_lines.append(f"真实RUL≈{true_rul:.1f}h @EOL≈{true_eol:.1f}h")
+            if pred_eol is not None:
+                ax.axvline(pred_eol, color="#F53F3F", linestyle=":", alpha=0.7, linewidth=1.3,
+                           label=f"预测EOL≈{pred_eol:.1f}h")
+                rul_info_lines.append(f"预测RUL≈{pred_rul:.1f}h @EOL≈{pred_eol:.1f}h")
 
-        # 估算RUL并标注（基于0.96阈值线性插值）
-        rul_info_lines = []
-        true_thr, true_eol, true_rul = _estimate_rul_from_series(x_axis[~np.isnan(target_series)],
-                                    target_series[~np.isnan(target_series)])
-        pred_thr, pred_eol, pred_rul = _estimate_rul_from_series(x_axis[~np.isnan(pred_series)],
-                                    pred_series[~np.isnan(pred_series)])
+            rul_txt = " | ".join(rul_info_lines) if rul_info_lines else "RUL不可用"
+            ax.set_title(f"{dataset_label} 预测 vs 真实 ({max_points} 点) | {metrics_txt} | {rul_txt}",
+                         fontsize=14, fontweight="bold", color="#1D2129")
 
-        if true_eol is not None:
-            ax.axvline(true_eol, color="#165DFF", linestyle=":", alpha=0.7, linewidth=1.3,
-                       label=f"真实EOL≈{true_eol:.1f}h")
-            rul_info_lines.append(f"真实RUL≈{true_rul:.1f}h @EOL≈{true_eol:.1f}h")
-        if pred_eol is not None:
-            ax.axvline(pred_eol, color="#F53F3F", linestyle=":", alpha=0.7, linewidth=1.3,
-                       label=f"预测EOL≈{pred_eol:.1f}h")
-            rul_info_lines.append(f"预测RUL≈{pred_rul:.1f}h @EOL≈{pred_eol:.1f}h")
-
-        # 标题附加RUL文本
-        rul_txt = " | ".join(rul_info_lines) if rul_info_lines else "RUL不可用"
-        ax.set_title(f"{dataset_label} 预测 vs 真实 ({max_points} 点) | {metrics_txt} | {rul_txt}",
-                     fontsize=14, fontweight="bold", color="#1D2129")
         ax.set_xlabel(x_label, fontsize=12, color="#1D2129")
         ax.set_ylabel("电压 / 目标值", fontsize=12, color="#1D2129")
         ax.grid(True, alpha=0.3, linestyle='--', color="#E5E6EB")
         ax.legend(loc='best')
 
-        # 拉长时间轴到1500h以便观察滚动RUL
+        # 调整时间轴范围
         if np.issubdtype(x_axis.dtype, np.number):
             x_min = float(np.nanmin(x_axis)) if len(x_axis) else 0.0
             x_max = float(np.nanmax(x_axis)) if len(x_axis) else 0.0
-            ax.set_xlim(left=x_min, right=max(1500.0, x_max * 1.02))
+            if 'is_fc2_half' in locals() and is_fc2_half:
+                # FC2 50:50 视图：右边界贴近真实数据末端，避免空白
+                ax.set_xlim(left=x_min, right=x_max * 1.02)
+            elif dataset_label.upper() == "FC1":
+                # FC1 恢复原先自适应范围，避免额外留白
+                ax.set_xlim(left=x_min, right=x_max * 1.02)
+            else:
+                # 其他情况（如FC2无分割时含未来滚动）保留较长视域
+                ax.set_xlim(left=x_min, right=max(1500.0, x_max * 1.02))
+
+        # 纵轴范围：FC1 贴合数据上下限，避免过多空白
+        if dataset_label.upper() == "FC1":
+            y_vals = np.concatenate([target_series, pred_series])
+            y_vals = y_vals[np.isfinite(y_vals)]
+            if len(y_vals) > 0:
+                y_min = float(np.nanmin(y_vals))
+                y_max = float(np.nanmax(y_vals))
+                padding = max((y_max - y_min) * 0.05, 1e-4)
+                ax.set_ylim(bottom=y_min - padding, top=y_max + padding)
 
         plt.tight_layout()
         return fig

@@ -2,13 +2,11 @@ import os
 import numpy as np
 import pandas as pd
 import torch
-import torch.nn as nn
 import matplotlib
 
 # Use non-interactive backend to avoid Tk/Tcl errors on headless systems
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import seaborn as sns
 from matplotlib.gridspec import GridSpec
 import matplotlib.transforms as mtransforms
 from datetime import datetime
@@ -144,7 +142,7 @@ def print_threshold_analysis(df, thresholds, validation_split_time):
         elif first_time:
             print(f"SOH {threshold_str}:")
             print(f"  传统方法 - 首次达标: {first_time:.1f}h")
-            print(f"  优化方法 - 未找到稳定达标点")
+            print("  优化方法 - 未找到稳定达标点")
         else:
             print(f"SOH {threshold_str}: 未达到阈值")
 
@@ -266,8 +264,6 @@ def predict_fc1_full_dataset(use_additional_testset: bool = False):
 
         # 获取保存的完整数据集信息
         entire_times = checkpoint['entire_times']
-        entire_voltages = checkpoint['entire_voltages']
-        entire_soh = checkpoint['entire_soh']
         validation_split_time = checkpoint.get('validation_split_time', 500.0)
 
         print(f"完整数据集时间范围: {entire_times.min():.1f} - {entire_times.max():.1f} h")
@@ -291,7 +287,7 @@ def predict_fc1_full_dataset(use_additional_testset: bool = False):
         scaler_mean = processed_data.get('scaler_mean', None)
         scaler_scale = processed_data.get('scaler_scale', None)
 
-        print(f"成功加载FC1完整训练集数据")
+        print("成功加载FC1完整训练集数据")
         print(f"训练集样本数: {len(y_train)}")
         print(f"时间范围: {train_times.min():.1f} - {train_times.max():.1f} h")
         print(f"特征变量: {feature_names}")
@@ -346,7 +342,7 @@ def predict_fc1_full_dataset(use_additional_testset: bool = False):
     )
 
     # 调试信息：检查数组长度
-    print(f"\n数组长度检查:")
+    print("\n数组长度检查:")
     print(f"train_times: {len(train_times)}")
     print(f"y_train: {len(y_train)}")
     print(f"predictions: {len(predictions)}")
@@ -488,7 +484,7 @@ def generate_full_dataset_visualizations(output_df, validation_split_time):
 
     # 创建多个子图
     fig, axes = plt.subplots(2, 2, figsize=(16, 12))
-    fig.suptitle(f'FC1 SOH预测结果 - 完整数据集 (物理约束训练+后处理)', fontsize=16, fontweight='bold')
+    fig.suptitle('FC1 SOH预测结果 - 完整数据集 (物理约束训练+后处理)', fontsize=16, fontweight='bold')
 
     # 1. SOH预测对比（完整时间段）
     ax1 = axes[0, 0]
@@ -639,7 +635,7 @@ def generate_validation_analysis(output_df, validation_split_time):
     # 图表美化
     ax.set_xlabel('时间 (h)', fontsize=12)
     ax.set_ylabel('SOH', fontsize=12)
-    ax.set_title(f'FC1 SOH预测性能分析 (物理约束训练+后处理)',
+    ax.set_title('FC1 SOH预测性能分析 (物理约束训练+后处理)',
                  fontsize=14, fontweight='bold')
     ax.legend(loc='upper right', fontsize=10)
     ax.grid(alpha=0.3)

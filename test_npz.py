@@ -5,11 +5,11 @@ NPZ数据可视化检测工具 - 修复版
 自动使用最新的NPZ文件
 """
 
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
+import seaborn as sns  # pyright: ignore[reportMissingModuleSource]
 import pandas as pd
 from pandas.api.types import is_timedelta64_dtype
 import os
@@ -23,7 +23,7 @@ try:
     # 尝试使用更常见的中文字体
     plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'DejaVu Sans', 'Arial Unicode MS', 'sans-serif']
     plt.rcParams['axes.unicode_minus'] = False
-except:
+except Exception:
     # 如果上述字体不存在，使用更通用的设置
     plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
     plt.rcParams['axes.unicode_minus'] = False
@@ -218,7 +218,7 @@ class NPZDataVisualizerFixed:
                 # 创建DataFrame
                 self.df = pd.DataFrame(self.data, columns=self.columns)
 
-            print(f"\n步骤1: 数据基本信息")
+            print("\n步骤1: 数据基本信息")
             assert self.data is not None
             data_shape = self.data.shape
             print(f"  数据形状: {data_shape}")
@@ -227,7 +227,7 @@ class NPZDataVisualizerFixed:
             if len(data_shape) >= 2:
                 print(f"  特征数量: {data_shape[1]}")
             else:
-                print(f"  特征数量: 1")
+                print("  特征数量: 1")
 
             print(f"  特征名称: {list(self.columns)}")
             print(f"  DataFrame形状: {self.df.shape}")
@@ -242,7 +242,7 @@ class NPZDataVisualizerFixed:
 
     def basic_statistics(self):
         """计算并显示基本统计信息"""
-        print(f"\n步骤2: 数据基本统计信息")
+        print("\n步骤2: 数据基本统计信息")
 
         if self.df is None:
             print("❌ Data not loaded. Run load_npz_data() first.")
@@ -266,7 +266,7 @@ class NPZDataVisualizerFixed:
         stats_summary['skewness'] = df[numeric_columns].skew()
         stats_summary['kurtosis'] = df[numeric_columns].kurtosis()
 
-        print(f"\n  各特征统计摘要:")
+        print("\n  各特征统计摘要:")
         for col in numeric_columns[:5]:  # 只显示前5个特征
             col_data = df[col]
             print(f"    {col}:")
@@ -277,7 +277,7 @@ class NPZDataVisualizerFixed:
         # 电压特定检查
         if 'stack_voltage' in df.columns:
             voltage_data = df['stack_voltage']
-            print(f"\n  🔋 电压专项检查:")
+            print("\n  🔋 电压专项检查:")
             print(f"      电压范围: [{voltage_data.min():.3f}, {voltage_data.max():.3f}] V")
             print(f"      电压均值: {voltage_data.mean():.3f} ± {voltage_data.std():.3f} V")
 
@@ -288,7 +288,7 @@ class NPZDataVisualizerFixed:
 
     def detect_outliers(self):
         """检测异常值"""
-        print(f"\n步骤3: 异常值检测")
+        print("\n步骤3: 异常值检测")
 
         if self.df is None:
             print("❌ Data not loaded. Run load_npz_data() first.")
@@ -330,7 +330,7 @@ class NPZDataVisualizerFixed:
 
     def visualize_data(self, save_dir="npz_visualization_fixed"):
         """可视化数据 - 修复字体显示，优化电压图"""
-        print(f"\n步骤4: 数据可视化")
+        print("\n步骤4: 数据可视化")
 
         # 创建保存目录
         os.makedirs(save_dir, exist_ok=True)
@@ -528,12 +528,12 @@ class NPZDataVisualizerFixed:
                         corr_value = float(pd.to_numeric(corr_matrix.iloc[i, j], errors='coerce'))  # type: ignore[arg-type]
                         # 只显示绝对值较大的相关系数
                         if abs(corr_value) > 0.3:
-                            text = ax3.text(j, i, f'{corr_value:.2f}',
-                                            ha="center", va="center", color="black", fontsize=8)
+                            ax3.text(j, i, f'{corr_value:.2f}',
+                                     ha="center", va="center", color="black", fontsize=8)
                         elif abs(corr_value) > 0.7:
                             # 强相关用白色显示
-                            text = ax3.text(j, i, f'{corr_value:.2f}',
-                                            ha="center", va="center", color="white", fontsize=8, fontweight='bold')
+                            ax3.text(j, i, f'{corr_value:.2f}',
+                                     ha="center", va="center", color="white", fontsize=8, fontweight='bold')
 
                 ax3.set_title(f'{self.dataset_name} - Feature Correlation Heatmap', fontsize=14, pad=20)
                 plt.tight_layout()
@@ -545,7 +545,7 @@ class NPZDataVisualizerFixed:
 
     def check_data_quality(self):
         """检查数据质量"""
-        print(f"\n步骤5: 数据质量评估")
+        print("\n步骤5: 数据质量评估")
 
         try:
             df = self._ensure_df()
@@ -569,12 +569,12 @@ class NPZDataVisualizerFixed:
         quality_report['missing_values'] = missing_values
         quality_report['missing_pct'] = missing_pct
 
-        print(f"  Missing values check:")
+        print("  Missing values check:")
         print(f"    Total missing values: {missing_values}")
         print(f"    Missing percentage: {missing_pct:.4f}%")
 
         if missing_pct == 0:
-            print(f"    ✓ No missing values")
+            print("    ✓ No missing values")
         elif missing_pct < 1:
             print(f"    ⚠ Few missing values ({missing_pct:.4f}%)")
             quality_report['quality_score'] -= 5
@@ -588,12 +588,12 @@ class NPZDataVisualizerFixed:
         quality_report['duplicates'] = duplicates
         quality_report['duplicate_pct'] = duplicate_pct
 
-        print(f"  Duplicates check:")
+        print("  Duplicates check:")
         print(f"    Duplicate rows: {duplicates}")
         print(f"    Duplicate percentage: {duplicate_pct:.4f}%")
 
         if duplicates == 0:
-            print(f"    ✓ No duplicate rows")
+            print("    ✓ No duplicate rows")
         elif duplicate_pct < 0.1:
             print(f"    ⚠ Very few duplicate rows ({duplicate_pct:.4f}%)")
             quality_report['quality_score'] -= 2
@@ -606,13 +606,13 @@ class NPZDataVisualizerFixed:
             voltage_min = df['stack_voltage'].min()
             voltage_max = df['stack_voltage'].max()
 
-            print(f"  Voltage range check:")
+            print("  Voltage range check:")
             print(f"    Min voltage: {voltage_min:.3f} V")
             print(f"    Max voltage: {voltage_max:.3f} V")
 
             # 燃料电池电压通常应在合理范围内
             if 3.0 <= voltage_min <= 3.5 and 3.0 <= voltage_max <= 3.5:
-                print(f"    ✓ Voltage range normal (3.0-3.5V)")
+                print("    ✓ Voltage range normal (3.0-3.5V)")
             else:
                 print(f"    ⚠ Voltage range abnormal: {voltage_min:.3f}-{voltage_max:.3f} V")
                 quality_report['quality_score'] -= 15
@@ -624,7 +624,7 @@ class NPZDataVisualizerFixed:
             high_variance_cols = std_devs[std_devs == 0].index.tolist()
 
             if high_variance_cols:
-                print(f"  Zero-variance features check:")
+                print("  Zero-variance features check:")
                 print(f"    Found {len(high_variance_cols)} zero-variance features: {high_variance_cols[:5]}")
                 quality_report['quality_score'] -= len(high_variance_cols) * 2
 
@@ -634,13 +634,13 @@ class NPZDataVisualizerFixed:
         print(f"\n  📊 Data Quality Score: {quality_report['quality_score']}/100")
 
         if quality_report['quality_score'] >= 90:
-            print(f"  ✅ Excellent data quality")
+            print("  ✅ Excellent data quality")
         elif quality_report['quality_score'] >= 75:
-            print(f"  ⚠ Good data quality, but can be improved")
+            print("  ⚠ Good data quality, but can be improved")
         elif quality_report['quality_score'] >= 60:
-            print(f"  ⚠ Average data quality, check recommended")
+            print("  ⚠ Average data quality, check recommended")
         else:
-            print(f"  ❌ Poor data quality, reprocessing needed")
+            print("  ❌ Poor data quality, reprocessing needed")
 
         return quality_report
 
@@ -681,7 +681,7 @@ class NPZDataVisualizerFixed:
                 voltage_max = df['stack_voltage'].max()
                 f.write(f"    Voltage Range: {voltage_min:.3f} - {voltage_max:.3f} V\n")
 
-            f.write(f"3. Quality Score\n")
+            f.write("3. Quality Score\n")
             f.write(f"    Overall Quality Score: {quality_report['quality_score']}/100\n\n")
 
             f.write("4. Recommendations\n")
@@ -791,7 +791,7 @@ def main():
 
         print(f"\n{'=' * 60}")
         print("所有NPZ文件分析完成!")
-        print(f"可视化结果已保存至: npz_visualization_fixed/")
+        print("可视化结果已保存至: npz_visualization_fixed/")
         print(f"{'=' * 60}")
 
 

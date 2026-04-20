@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 
 # 设置支持中文的字体
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 或 'Microsoft YaHei' 如果SimHei不可用

@@ -21,6 +21,7 @@ from .plot_worker import (
 import pandas as pd
 import shutil
 
+
 # ================= 路径与运行环境配置 =================
 # 在打包(onefile)后，PyInstaller会将资源解压到临时目录(sys._MEIPASS)，
 # 这里统一计算基准目录，避免依赖当前工作目录导致找不到CSV或误触发自启动。
@@ -162,7 +163,7 @@ class FeatureImportancePage(QWidget):
         control_layout.setSpacing(15)
 
         # 运行CatBoost分析
-        self.run_analysis_btn = QPushButton("运行CatBoost分析")
+        self.run_analysis_btn = QPushButton("运行重要性分析")
         self.run_analysis_btn.setStyleSheet("""
             QPushButton { background-color: #00B42A; color: white; border: none; border-radius: 6px;
                           padding: 10px 20px; font-size: 14px; font-weight: 600; }
@@ -430,7 +431,7 @@ class DataProcessingPage(QWidget):
         btn_row.setContentsMargins(0, -4, 16, 0)
         btn_row.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
 
-        self.run_processing_btn = QPushButton("运行 data_processing.py")
+        self.run_processing_btn = QPushButton("进行数据处理")
         self.run_processing_btn.setFixedHeight(44)
         self.run_processing_btn.setMinimumWidth(210)
         self.run_processing_btn.setStyleSheet("""
@@ -723,7 +724,7 @@ class LifePredictionPage(QWidget):
         control_layout.setContentsMargins(20, 20, 20, 20)
         control_layout.setSpacing(12)
 
-        self.run_train_btn = QPushButton("运行 train.py")
+        self.run_train_btn = QPushButton("运行模型训练与寿命预测")
         self.run_train_btn.setMinimumHeight(44)
         self.run_train_btn.setStyleSheet("""
             QPushButton { background-color: #00B42A; color: white; border: none; border-radius: 8px;
@@ -748,7 +749,7 @@ class LifePredictionPage(QWidget):
         self.plot_fc1_btn.clicked.connect(lambda: self.plot_predictions("FC1", max_points=2000))
         control_layout.addWidget(self.plot_fc1_btn, 1, 0)
 
-        self.plot_fc2_btn = QPushButton("绘制FC2预测对比（短时间轴）")
+        self.plot_fc2_btn = QPushButton("绘制FC2预测对比")
         self.plot_fc2_btn.setMinimumHeight(44)
         self.plot_fc2_btn.setStyleSheet("""
             QPushButton { background-color: #FF7D00; color: white; border: none; border-radius: 8px;
@@ -759,7 +760,7 @@ class LifePredictionPage(QWidget):
         self.plot_fc2_btn.clicked.connect(lambda: self.plot_predictions("FC2", max_points=200000))
         control_layout.addWidget(self.plot_fc2_btn, 1, 1)
 
-        self.clean_btn = QPushButton("清理生成文件")
+        self.clean_btn = QPushButton("清理临时文件")
         self.clean_btn.setMinimumHeight(44)
         self.clean_btn.setStyleSheet("""
             QPushButton { background-color: #86909C; color: white; border: none; border-radius: 8px;
@@ -771,7 +772,7 @@ class LifePredictionPage(QWidget):
 
         layout.addWidget(control_group)
 
-        chart_group = QGroupBox("预测 vs 真实曲线")
+        chart_group = QGroupBox("预测值与真实曲线")
         chart_layout = QVBoxLayout(chart_group)
         chart_layout.setContentsMargins(20, 20, 20, 20)
         chart_layout.setSpacing(15)

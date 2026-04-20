@@ -16,7 +16,6 @@
 # 0. 导入必要的库
 # ============================================================================
 import os
-import pickle
 import sys
 import time
 import json
@@ -28,7 +27,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import font_manager as fm
 from datetime import datetime
-from typing import Tuple, Dict, List, Optional, Any, Union
+from typing import Tuple, Dict, List, Optional, Any
 from dataclasses import dataclass, field
 
 import torch
@@ -39,8 +38,7 @@ from torch.utils.data import Dataset, DataLoader
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.linear_model import LinearRegression
-import pywt  # 小波变换库
-from scipy import signal
+import pywt  # pyright: ignore[reportMissingImports]  # 小波变换库
 
 # 强制UTF-8输出，避免Windows控制台乱码
 os.environ.setdefault("PYTHONIOENCODING", "utf-8")
@@ -398,8 +396,6 @@ class TrainingLogger:
 # ============================================================================
 # 3. 数据处理模块 - 基于论文逻辑
 # ============================================================================
-
-from numpy.typing import ArrayLike
 
 
 class WaveletDenoiser:
@@ -1048,9 +1044,12 @@ class DataProcessor:
             train_feats = train_data[self.selected_features].to_numpy()
             self.feature_min = np.nanmin(train_feats, axis=0)
             self.feature_max = np.nanmax(train_feats, axis=0)
-            self.logger.log_info(
-                f"训练特征范围: min={self.feature_min.min():.4f}~max={self.feature_max.max():.4f}"
-            )
+            if self.feature_min is not None and self.feature_max is not None:
+                self.logger.log_info(
+                    f"训练特征范围: min={self.feature_min.min():.4f}~max={self.feature_max.max():.4f}"
+                )
+            else:
+                self.logger.log_warning("训练特征范围未记录，跳过范围日志")
         except Exception as range_err:
             self.logger.log_warning(f"记录训练特征范围失败: {range_err}")
 
@@ -2339,7 +2338,7 @@ class Visualization:
             axes[1, 0].set_yticks([])
 
         # 第四幅图：详细信息
-        info_text = f"V_initial 详情:\n"
+        info_text = "V_initial 详情:\n"
         info_text += f"  真实 V_initial: {rul_results.get('true_V_initial', 0):.4f} V\n"
         info_text += f"  预测 V_initial: {rul_results.get('pred_V_initial', 0):.4f} V\n\n"
 
@@ -2721,32 +2720,10 @@ class PEMFCTrainer:
             self.logger.log_info("在测试集上评估模型...")
             evaluation_results = trainer.evaluate(data_result['test_loader'])
 
-            # 4.1 滚动多步预测（使用测试集末尾窗口）
-            future_result = self.rolling_forecast(trainer, data_result['split_data'])
-            if future_result is not None:
-                forecast_df = pd.DataFrame({
-                    'dataset': 'FC1',
-                    'split': 'fc1_future',
-                    'step': np.arange(1, len(future_result['predictions']) + 1),
-                    'time': future_result['time'],
-                    'target': [np.nan] * len(future_result['predictions']),
-                    'prediction': future_result['predictions']
-                })
-                for idx, feat_name in enumerate(self.data_processor.selected_features):
-                    if idx >= future_result['future_features'].shape[1]:
-                        continue
-                    # 避免覆盖时间轴，time特征另存为time_feature列
-                    if feat_name.lower() == 'time':
-                        forecast_df['time_feature'] = future_result['future_features'][:, idx]
-                        continue
-                    forecast_df[feat_name] = future_result['future_features'][:, idx]
-
-                forecast_path = os.path.join(self.config.save_paths['csv'], 'future_rollout.csv')
-                forecast_df.to_csv(forecast_path, index=False, encoding='utf-8')
-                self.logger.log_info(
-                    f"滚动多步预测完成，共 {len(future_result['predictions'])} 步，结果保存: {forecast_path}")
-            else:
-                forecast_df = None
+            # 4.1 滚动多步预测关闭（FC1 不再生成未来外推，前端仅展示真实/测试段）
+            future_result = None
+            forecast_df = None
+            self.logger.log_info("FC1 滚动预测已关闭，预测结果仅包含历史+测试段")
 
             # 5. 计算SOH和RUL
             self.logger.log_info("计算SOH和RUL...")
@@ -2846,9 +2823,6 @@ class PEMFCTrainer:
 
             # 跨数据集预测：使用FC1训练好的模型在FC2上推理
             fc2_result = None
-            fc2_future_df = None
-            fc2_full_path = None
-            fc2_full_img_path = None
             fc2_path = os.path.join("processed_results", "FC2")
             if os.path.exists(fc2_path):
                 try:
@@ -2882,221 +2856,91 @@ class PEMFCTrainer:
                     except Exception as bias_err:
                         self.logger.log_warning(f"FC2 残差校正失败: {bias_err}")
 
-                    # 生成FC2的滚动未来预测（完整时间轴: 0h~末尾+预测步）
+                    # 生成 FC2 50:50 分割可视化与结果（取消未来滚动预测）
                     try:
-                        seq_len = self.config.sequence_length
-                        raw_feats = np.asarray(fc2_result.get('raw_features', []), dtype=float)
-                        scaled_feats = np.asarray(fc2_result.get('scaled_features', []), dtype=float)
-                        scaler_X = fc2_result.get('scaler_X')
-                        inverse_target = fc2_result.get('inverse_target_fn')
                         time_fc2 = np.asarray(fc2_result.get('time', []), dtype=float)
+                        target_fc2 = np.asarray(fc2_result.get('target', []), dtype=float)
+                        pred_fc2 = np.asarray(fc2_result.get('prediction', []), dtype=float)
+                        if len(time_fc2) == 0 or len(target_fc2) == 0 or len(pred_fc2) == 0:
+                            raise ValueError("FC2 推理结果为空，无法生成阈值分割图")
 
-                        # 用FC2最后窗口冻结非时间特征，避免长时间滚动时向上漂移；时间保持递增
-                        fc2_feat_min = None
-                        fc2_feat_max = None
-                        time_idx = None
+                        # 以 300h 为阈值，提前开始展示预测
                         try:
-                            time_idx = self.data_processor.selected_features.index('time')
-                        except ValueError:
-                            time_idx = None
+                            start_idx = int(np.searchsorted(time_fc2, 300.0, side='left'))
+                        except Exception:
+                            # 若时间轴异常，退回按对半划分
+                            start_idx = len(time_fc2) // 2
 
-                        if raw_feats.shape[0] >= seq_len:
-                            last_window_raw = raw_feats[-1].astype(float)
-                            fc2_feat_min = last_window_raw.copy()
-                            fc2_feat_max = last_window_raw.copy()
-                            if time_idx is not None and 0 <= time_idx < len(fc2_feat_min):
-                                fc2_feat_min[time_idx] = -np.inf
-                                fc2_feat_max[time_idx] = np.inf
+                        start_idx = max(0, min(len(time_fc2), start_idx))
+                        boundary_time = float(time_fc2[start_idx - 1]) if start_idx > 0 else float(time_fc2[0])
 
-                        if raw_feats.shape[0] >= seq_len and scaled_feats.shape[0] >= seq_len:
-                            window_raw = raw_feats[-seq_len:].copy()
-                            window_scaled = scaled_feats[-seq_len:].copy()
-                            dt_base = 1.0
-                            if len(time_fc2) > 1:
-                                dt_base = float(np.median(np.diff(time_fc2[-min(200, len(time_fc2)-1):])))
-                                if dt_base <= 0 or not np.isfinite(dt_base):
-                                    dt_base = 1.0
+                        # 生成两段CSV用于前端绘制：阈值前仅真实，阈值后真实+预测
+                        fc2_first_df = pd.DataFrame({
+                            'dataset': 'FC2',
+                            'split': 'fc2_first_half',
+                            'time': time_fc2[:start_idx],
+                            'target': target_fc2[:start_idx],
+                            'prediction': np.full(start_idx, np.nan)
+                        })
+                        fc2_second_df = pd.DataFrame({
+                            'dataset': 'FC2',
+                            'split': 'fc2_second_half',
+                            'time': time_fc2[start_idx:],
+                            'target': target_fc2[start_idx:],
+                            'prediction': pred_fc2[start_idx:]
+                        })
 
-                            # 避免极小/零步长导致未来时间轴不递增
-                            min_dt = 1e-4
-                            if dt_base < min_dt:
-                                self.logger.log_warning(
-                                    f"FC2 时间步长过小({dt_base:.6f})，使用下限 {min_dt}"
-                                )
-                                dt_base = min_dt
+                        # 计算真实与预测RUL（预测用后半段）
+                        calc = SOHRULCalculator(self.config, self.logger)
+                        # 真实RUL基于全序列
+                        try:
+                            true_V0, _ = calc.calculate_v_initial(target_fc2)
+                            true_soh = calc.calculate_soh(target_fc2, true_V0)
+                            true_rul = calc.calculate_rul(true_soh, time_fc2)
+                        except Exception as e_r_true:
+                            self.logger.log_warning(f"FC2 真实RUL计算失败: {e_r_true}")
+                            true_rul = {'rul_actual': None, 'eol_time': None, 'method': 'error'}
 
-                            desired_end = getattr(self.config, "forecast_horizon", 1500.0) or 1500.0
-                            span = max(desired_end - float(time_fc2[-1]), 0.0)
-                            steps_base = int(np.ceil(span / dt_base)) if span > 0 and dt_base > 0 else self.config.forecast_steps
-                            steps = min(getattr(self.config, "forecast_max_steps", steps_base), max(self.config.forecast_steps, steps_base, 1))
-                            dt = dt_base
+                        # 预测RUL基于后半段预测
+                        try:
+                            pred_V0, _ = calc.calculate_v_initial(pred_fc2[start_idx:])
+                            pred_soh = calc.calculate_soh(pred_fc2[start_idx:], pred_V0)
+                            pred_rul = calc.calculate_rul(pred_soh, time_fc2[start_idx:])
+                        except Exception as e_r_pred:
+                            self.logger.log_warning(f"FC2 预测RUL计算失败: {e_r_pred}")
+                            pred_rul = {'rul_actual': None, 'eol_time': None, 'method': 'error'}
 
-                            # 对时间特征放宽上界，避免被历史最大值截断
-                            if time_idx is not None and fc2_feat_max is not None:
-                                fc2_feat_max = np.array(fc2_feat_max, dtype=float)
-                                fc2_feat_max[time_idx] = max(float(time_fc2[-1]) + 2 * span, float(time_fc2[-1]) + 1.0)
+                        # 保存半幅预测图（与前端一致的配色与风格）
+                        try:
+                            plt.rcParams["font.family"] = ["SimHei", "Microsoft YaHei", "sans-serif"]
+                            plt.rcParams["axes.unicode_minus"] = False
+                            fig, ax = plt.subplots(figsize=(12, 6), dpi=110, facecolor='white')
+                            ax.plot(time_fc2[:start_idx], target_fc2[:start_idx], label='真实(≤300h)', color='#165DFF', linewidth=1.8)
+                            ax.axvline(boundary_time, color='#86909C', linestyle='--', linewidth=1.2, alpha=0.8, label='分割线@300h')
+                            ax.plot(time_fc2[start_idx:], target_fc2[start_idx:], label='真实(>300h)', color='#165DFF', linewidth=1.5, alpha=0.7)
+                            ax.plot(time_fc2[start_idx:], pred_fc2[start_idx:], label='预测(>300h)', color='#F53F3F', linewidth=1.8, linestyle='--')
 
-                            future_preds = []
-                            future_times = []
-                            future_feats = []
-                            current_time = float(time_fc2[-1]) if len(time_fc2) > 0 else 0.0
+                            title_rul = f"真实RUL={true_rul.get('rul_actual', 'NA')}h | 预测RUL={pred_rul.get('rul_actual', 'NA')}h"
+                            ax.set_title(f"FC2 预测对比（300h后开始） | {title_rul}", fontsize=14, fontweight='bold', color='#1D2129')
+                            ax.set_xlabel('时间 (h)', fontsize=12, color='#1D2129')
+                            ax.set_ylabel('堆栈电压 (V)', fontsize=12, color='#1D2129')
+                            ax.grid(True, alpha=0.3, linestyle='--', color='#E5E6EB')
+                            ax.legend(loc='best')
+                            plt.tight_layout()
+                            fc2_half_img_path = os.path.join(self.config.save_paths['images'], 'fc2_half_prediction.png')
+                            fig.savefig(fc2_half_img_path, dpi=150, bbox_inches='tight')
+                            plt.close(fig)
+                            self.logger.log_info(f"FC2 半幅预测图保存: {fc2_half_img_path}")
+                        except Exception as plot_err:
+                            self.logger.log_warning(f"FC2 半幅绘图失败: {plot_err}")
 
-                            self.logger.log_info(
-                                f"FC2 未来滚动: last_time={current_time:.3f}, dt={dt_base:.6f}, steps={steps}"
-                            )
-
-                            # 周期窗口选择：使用FC2测试尾部的一个代表性周期
-                            cycle_window_len = int(max(120, min(320, seq_len * 3)))
-                            tail_len = window_raw.shape[0]
-                            cycle_start = max(0, tail_len - cycle_window_len)
-                            cycle_window = window_raw[cycle_start:tail_len].copy()
-                            # 计算窄幅clamp范围（P5-P95再加极小余量）
-                            p5 = np.percentile(cycle_window, 5, axis=0)
-                            p95 = np.percentile(cycle_window, 95, axis=0)
-                            clamp_margin = 0.005  # 0.5%
-                            clamp_min_cycle = p5 * (1.0 - clamp_margin)
-                            clamp_max_cycle = p95 * (1.0 + clamp_margin)
-                            if time_idx is not None:
-                                # 时间特征不参与窄幅clamp
-                                clamp_min_cycle[time_idx] = -np.inf
-                                clamp_max_cycle[time_idx] = np.inf
-
-                            # 微漂移设定：每完成一个周期，叠加极小幅度的线性漂移系数
-                            drift_per_cycle = 0.015  # 1.5%，进一步加快缓降斜率
-                            drift_sign = -1.0  # 负号让周期幅值随时间微下降，避免越滚越高
-
-                            for step in range(steps):
-                                seq_tensor = torch.FloatTensor(window_scaled).unsqueeze(0).to(trainer.device)
-                                pred_scaled = trainer.model(seq_tensor).detach().cpu().numpy().flatten()[0]
-                                pred_value = inverse_target([pred_scaled])[0] if inverse_target else float(pred_scaled)
-
-                                future_preds.append(pred_value)
-
-                                # 累积时间，确保严格递增
-                                current_time += dt
-                                future_times.append(current_time)
-
-                                # 生成下一步特征：循环周期窗口 + 微漂移 + 窄幅clamp
-                                idx_in_cycle = step % cycle_window.shape[0]
-                                base_feat = cycle_window[idx_in_cycle].copy()
-
-                                # 计算当前已完成的周期数，用于线性微漂移
-                                cycles_completed = step // cycle_window.shape[0]
-                                drift_factor = 1.0 + drift_sign * drift_per_cycle * cycles_completed
-
-                                next_feat_raw = base_feat * drift_factor
-
-                                # 对非时间特征进行窄幅clamp，避免漂移积累跑偏
-                                next_feat_raw = np.clip(next_feat_raw, clamp_min_cycle, clamp_max_cycle)
-
-                                # time特征强制对齐未来时间轴
-                                if time_idx is not None and 0 <= time_idx < next_feat_raw.shape[0]:
-                                    next_feat_raw[time_idx] = current_time
-
-                                future_feats.append(next_feat_raw)
-
-                                next_feat_scaled = scaler_X.transform(next_feat_raw.reshape(1, -1)) if scaler_X is not None else next_feat_raw.reshape(1, -1)
-                                # 更新窗口（滑动）
-                                window_raw = np.concatenate([window_raw[1:], next_feat_raw[None]], axis=0)
-                                window_scaled = np.concatenate([window_scaled[1:], next_feat_scaled], axis=0)
-
-                            # 若存在残差线性校正，应用于未来段以抵消正偏差
-                            bias_coeff = fc2_result.get('bias_coeff') if fc2_result else None
-                            if bias_coeff:
-                                slope = float(bias_coeff.get('slope', 1.0))
-                                intercept = float(bias_coeff.get('intercept', 0.0))
-                                future_preds = [slope * p + intercept for p in future_preds]
-                                self.logger.log_info(
-                                    f"FC2 未来段应用残差校正: slope={slope:.6f}, intercept={intercept:.6f}")
-
-                            # 连续性校正：消除 fc2_test -> fc2_future 的首点跳变
-                            if fc2_result is not None and len(future_preds) > 0:
-                                anchor_series = fc2_result.get('prediction', [])  # 使用未做偏差校正的末点对齐，避免抬高
-                                if len(anchor_series) > 0:
-                                    anchor_ref = float(np.asarray(anchor_series, dtype=float)[-1])
-                                    offset = future_preds[0] - anchor_ref
-                                    future_preds = [p - offset for p in future_preds]
-                                    self.logger.log_info(
-                                        f"FC2 未来段连续性校正: 对未来序列整体平移 -{offset:.6f} 以衔接测试末点 (raw预测对齐)")
-
-                            # 保存FC2完整时间轴CSV（包含未来预测，目标缺省为NaN）
-                            feature_cols = self.data_processor.selected_features
-                            fc2_future_df = pd.DataFrame({
-                                'dataset': 'FC2',
-                                'split': 'fc2_future',
-                                'time': future_times,
-                                'target': [np.nan] * len(future_preds),
-                                'prediction': future_preds
-                            })
-                            for idx, feat_name in enumerate(feature_cols):
-                                if idx >= len(future_feats[0]):
-                                    continue
-                                if feat_name.lower() == 'time':
-                                    fc2_future_df['time_feature'] = [row[idx] for row in future_feats]
-                                    continue
-                                fc2_future_df[feat_name] = [row[idx] for row in future_feats]
-
-                            fc2_full_df = pd.concat([
-                                pd.DataFrame({
-                                    'dataset': 'FC2',
-                                    'split': 'fc2_test',
-                                    'time': fc2_result['time'],
-                                    'target': fc2_result['target'],
-                                    'prediction': fc2_result['prediction']
-                                }),
-                                fc2_future_df
-                            ], ignore_index=True)
-
-                            fc2_full_path = os.path.join(self.config.save_paths['csv'], 'fc2_full_with_future.csv')
-                            fc2_full_df.to_csv(fc2_full_path, index=False, encoding='utf-8')
-                            self.logger.log_info(f"FC2 全时间轴预测保存: {fc2_full_path}")
-
-                            # 计算FC2预测RUL（基于完整预测曲线外推）
-                            try:
-                                fc2_pred_full = np.asarray(fc2_full_df['prediction'], dtype=float)
-                                fc2_time_full = np.asarray(fc2_full_df['time'], dtype=float)
-                                fc2_pred_V0, _ = calculator.calculate_v_initial(fc2_pred_full)
-                                fc2_pred_soh = calculator.calculate_soh(fc2_pred_full, fc2_pred_V0)
-                                fc2_pred_rul = calculator.calculate_rul(fc2_pred_soh, fc2_time_full)
-                                fc2_result['rul_pred'] = fc2_pred_rul
-                                fc2_result['pred_V_initial_full'] = fc2_pred_V0
-
-                                fc2_rul_path = os.path.join(self.config.save_paths['csv'], 'fc2_rul_prediction.csv')
-                                pd.DataFrame([{
-                                    'dataset': 'FC2',
-                                    'rul_pred': fc2_pred_rul.get('rul_actual'),
-                                    'eol_time': fc2_pred_rul.get('eol_time'),
-                                    'threshold': fc2_pred_rul.get('threshold'),
-                                    'method': fc2_pred_rul.get('method')
-                                }]).to_csv(fc2_rul_path, index=False, encoding='utf-8')
-                                self.logger.log_info(
-                                    f"FC2 预测RUL: {fc2_pred_rul.get('rul_actual')}, EOL={fc2_pred_rul.get('eol_time')} 保存: {fc2_rul_path}")
-                            except Exception as fc2_rul_err:
-                                self.logger.log_warning(f"FC2 预测RUL计算失败: {fc2_rul_err}")
-
-                            # 绘制FC2完整时间轴图像（已知+未来预测）
-                            try:
-                                plt.rcParams["font.family"] = ["SimHei", "Microsoft YaHei", "sans-serif"]
-                                plt.rcParams["axes.unicode_minus"] = False
-                                fig, ax = plt.subplots(figsize=(12, 6), dpi=110, facecolor='white')
-                                ax.plot(fc2_result['time'], fc2_result['target'], label='真实值', color='#165DFF', linewidth=1.6)
-                                ax.plot(fc2_result['time'], fc2_result['prediction'], label='预测值 (已知)', color='#F53F3F', linewidth=1.6, linestyle='--')
-                                ax.plot(future_times, future_preds, label='滚动预测 (未来)', color='#00B42A', linewidth=1.6, linestyle=':')
-                                ax.set_title('FC2 全时间轴预测（含未来滚动预测）', fontsize=14, fontweight='bold', color='#1D2129')
-                                ax.set_xlabel('时间 (h)', fontsize=12, color='#1D2129')
-                                ax.set_ylabel('堆栈电压 (V)', fontsize=12, color='#1D2129')
-                                ax.grid(True, alpha=0.3, linestyle='--', color='#E5E6EB')
-                                ax.legend(loc='best')
-                                plt.tight_layout()
-                                fc2_full_img_path = os.path.join(self.config.save_paths['images'], 'fc2_full_prediction.png')
-                                fig.savefig(fc2_full_img_path, dpi=150, bbox_inches='tight')
-                                plt.close(fig)
-                                self.logger.log_info(f"FC2 全时间轴预测图保存: {fc2_full_img_path}")
-                            except Exception as plot_err:
-                                self.logger.log_warning(f"FC2 全时间轴绘图失败: {plot_err}")
-
-                    except Exception as fc2_future_err:
-                        self.logger.log_warning(f"FC2 未来滚动预测失败: {fc2_future_err}")
+                        # 将两段合并到最终输出
+                        fc2_result['fc2_first_df'] = fc2_first_df
+                        fc2_result['fc2_second_df'] = fc2_second_df
+                        fc2_result['true_rul'] = true_rul
+                        fc2_result['pred_rul'] = pred_rul
+                    except Exception as fc2_half_err:
+                        self.logger.log_warning(f"FC2 50:50 生成失败: {fc2_half_err}")
 
                 except Exception as fc2_err:
                     self.logger.log_warning(f"FC2 预测失败: {fc2_err}")
@@ -3135,19 +2979,22 @@ class PEMFCTrainer:
             ]
 
             if fc2_result is not None:
-                preds_frames.append(pd.DataFrame({
-                    'dataset': 'FC2',
-                    'split': 'fc2_test',
-                    'time': fc2_result['time'],
-                    'target': fc2_result['target'],
-                    'prediction': fc2_result['prediction'],
-                    'prediction_bias_adj': fc2_result.get('prediction_bias_adj', np.nan)
-                }))
+                # 使用 50:50 分割输出到 predictions.csv
+                if 'fc2_first_df' in fc2_result and 'fc2_second_df' in fc2_result:
+                    preds_frames.append(fc2_result['fc2_first_df'])
+                    preds_frames.append(fc2_result['fc2_second_df'])
+                else:
+                    preds_frames.append(pd.DataFrame({
+                        'dataset': 'FC2',
+                        'split': 'fc2_test',
+                        'time': fc2_result['time'],
+                        'target': fc2_result['target'],
+                        'prediction': fc2_result['prediction']
+                    }))
                 metrics_rows.append({**fc2_result['metrics'], 'dataset': 'FC2'})
                 if 'metrics_bias_adj' in fc2_result:
                     metrics_rows.append({**fc2_result['metrics_bias_adj'], 'dataset': 'FC2_bias_adj'})
-                if fc2_future_df is not None:
-                    preds_frames.append(fc2_future_df)
+                # 不再追加未来滚动预测段
 
             preds_combined = pd.concat(preds_frames, ignore_index=True)
             preds_path = os.path.join(self.config.save_paths['csv'], 'predictions.csv')
@@ -3345,12 +3192,12 @@ PHM评分: {report['rul_metrics'].get('PHM_Score', 'N/A')}
         print("=" * 80)
         print(f"\n最佳模型: Epoch {report['training_results']['best_epoch']}")
         print(f"最佳验证损失: {report['training_results']['best_val_loss']:.6f}")
-        print(f"\n测试集指标:")
+        print("\n测试集指标:")
         for metric, value in report['test_metrics'].items():
             print(f"  {metric}: {value}")
 
         if report['rul_metrics']['MAE_RUL'] is not None:
-            print(f"\nRUL预测:")
+            print("\nRUL预测:")
             print(f"  真实RUL: {report['rul_details']['true_rul']} h")
             print(f"  预测RUL: {report['rul_details']['pred_rul']} h")
             print(f"  RUL MAE: {report['rul_metrics']['MAE_RUL']} h")

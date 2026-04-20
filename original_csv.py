@@ -9,7 +9,7 @@ from typing import Optional, List, Tuple
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
+import seaborn as sns  # pyright: ignore[reportMissingModuleSource]
 import os
 import warnings
 import chardet
@@ -22,7 +22,7 @@ warnings.filterwarnings('ignore')
 try:
     plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'DejaVu Sans', 'Arial Unicode MS', 'sans-serif']
     plt.rcParams['axes.unicode_minus'] = False
-except:
+except Exception:
     plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
     plt.rcParams['axes.unicode_minus'] = False
 
@@ -99,7 +99,7 @@ def read_csv_with_encoding(file_path: str, encoding: Optional[str] = None) -> Tu
 
     # 如果所有编码都失败，尝试使用错误处理
     try:
-        print(f"    尝试使用错误处理读取")
+        print("    尝试使用错误处理读取")
         df = pd.read_csv(str(file_path), encoding='utf-8', errors='ignore', engine='python')  # type: ignore[arg-type]
         return df, 'utf-8-with-errors-ignored'
     except Exception as e:
@@ -245,7 +245,7 @@ class CSVDataVisualizer:
             print(f"\n  成功加载 {successful_files}/{len(csv_files)} 个文件")
             self.df = pd.concat(all_data_frames, ignore_index=True, sort=False)
 
-            print(f"\n步骤1: 数据合并完成")
+            print("\n步骤1: 数据合并完成")
             print(f"  总样本数量: {len(self.df):,}")
             print(f"  特征数量: {len(self.df.columns)}")
             print(f"  最终列名: {list(self.df.columns)}")
@@ -256,11 +256,11 @@ class CSVDataVisualizer:
                 print(f"  时间范围: [{self.df['time'].min():.2f}, {self.df['time'].max():.2f}] 小时")
 
             # 显示数据基本信息
-            print(f"\n  数据基本信息:")
+            print("\n  数据基本信息:")
             print(f"    数据类型:\n{self.df.dtypes.value_counts()}")
 
             # 显示前几行数据
-            print(f"\n  数据前5行:")
+            print("\n  数据前5行:")
             print(self.df.head())
 
             return True
@@ -273,7 +273,7 @@ class CSVDataVisualizer:
 
     def basic_statistics(self):
         """计算并显示基本统计信息"""
-        print(f"\n步骤2: 数据基本统计信息")
+        print("\n步骤2: 数据基本统计信息")
 
         if self.df is None or len(self.df) == 0:
             print("  数据为空，跳过统计")
@@ -319,7 +319,7 @@ class CSVDataVisualizer:
 
         # 显示其他关键特征
         key_features = ['current_density', 'current', 'hydrogen_inlet_temp', 'air_inlet_temp', 'coolant_inlet_temp']
-        print(f"\n  其他关键特征统计:")
+        print(f"\n  其他关键特征统计:")  # noqa: F541
         for feature in key_features:
             if feature in self.df.columns:
                 col_data = self.df[feature].dropna()
@@ -332,7 +332,7 @@ class CSVDataVisualizer:
 
     def check_data_consistency(self):
         """检查数据一致性（跨文件）"""
-        print(f"\n步骤3: 跨文件数据一致性检查")
+        print("\n步骤3: 跨文件数据一致性检查")
 
         if self.df is None or len(self.df) == 0:
             print("  数据为空，跳过一致性检查")
@@ -357,18 +357,18 @@ class CSVDataVisualizer:
                     print(f"    电压范围: [{voltage.min():.3f}, {voltage.max():.3f}] V")
                     print(f"    电压均值: {voltage.mean():.3f} ± {voltage.std():.3f} V")
                 else:
-                    print(f"    电压: 无有效数据")
+                    print("    电压: 无有效数据")
 
             if 'time' in source_data.columns:
                 time_range = source_data['time'].dropna()
                 if len(time_range) > 0:
                     print(f"    时间范围: [{time_range.min():.2f}, {time_range.max():.2f}] 小时")
                 else:
-                    print(f"    时间: 无有效数据")
+                    print("    时间: 无有效数据")
 
         # 检查时间连续性
         if 'time' in self.df.columns:
-            print(f"\n  ⏱️ 时间连续性检查:")
+            print("\n  ⏱️ 时间连续性检查:")
             self.df = self.df.sort_values('time')
             time_data = self.df['time'].dropna().values
 
@@ -392,7 +392,7 @@ class CSVDataVisualizer:
 
     def visualize_raw_data(self, save_dir="csv_raw_visualization"):
         """可视化原始CSV数据 - 专门针对原始数据特性"""
-        print(f"\n步骤4: 原始数据可视化")
+        print("\n步骤4: 原始数据可视化")
 
         if self.df is None or len(self.df) == 0:
             print("  数据为空，跳过可视化")
@@ -577,7 +577,7 @@ class CSVDataVisualizer:
                     kde = stats.gaussian_kde(voltage_data)
                     x_range = np.linspace(voltage_data.min(), voltage_data.max(), 1000)
                     ax1.plot(x_range, kde(x_range), color='red', linewidth=2, label='KDE')
-                except:
+                except Exception:
                     pass  # 如果scipy不可用，跳过KDE
 
                 ax1.set_xlabel('Stack Voltage (V)', fontsize=12)
@@ -714,7 +714,7 @@ class CSVDataVisualizer:
 
     def check_data_quality(self):
         """检查原始数据质量"""
-        print(f"\n步骤5: 原始数据质量评估")
+        print("\n步骤5: 原始数据质量评估")
 
         if self.df is None or len(self.df) == 0:
             print("  数据为空，无法进行质量评估")
@@ -735,12 +735,12 @@ class CSVDataVisualizer:
         quality_report['missing_values'] = missing_values
         quality_report['missing_pct'] = missing_pct
 
-        print(f"  Missing values check:")
+        print("  Missing values check:")
         print(f"    Total missing values: {missing_values}")
         print(f"    Missing percentage: {missing_pct:.4f}%")
 
         if missing_pct == 0:
-            print(f"    ✓ No missing values")
+            print("    ✓ No missing values")
         elif missing_pct < 0.1:
             print(f"    ⚠ Very few missing values ({missing_pct:.4f}%)")
             quality_report['quality_score'] -= 5
@@ -757,12 +757,12 @@ class CSVDataVisualizer:
         quality_report['duplicates'] = duplicates
         quality_report['duplicate_pct'] = duplicate_pct
 
-        print(f"  Duplicates check:")
+        print("  Duplicates check:")
         print(f"    Duplicate rows: {duplicates}")
         print(f"    Duplicate percentage: {duplicate_pct:.4f}%")
 
         if duplicates == 0:
-            print(f"    ✓ No duplicate rows")
+            print("    ✓ No duplicate rows")
         elif duplicate_pct < 0.01:
             print(f"    ⚠ Very few duplicate rows ({duplicate_pct:.4f}%)")
             quality_report['quality_score'] -= 2
@@ -777,14 +777,14 @@ class CSVDataVisualizer:
                 voltage_min = voltage_data.min()
                 voltage_max = voltage_data.max()
 
-                print(f"  Voltage quality check:")
+                print("  Voltage quality check:")
                 print(f"    Min voltage: {voltage_min:.3f} V")
                 print(f"    Max voltage: {voltage_max:.3f} V")
                 print(f"    Voltage range: {voltage_max - voltage_min:.3f} V")
 
                 # 检查电压范围是否合理
                 if 3.0 <= voltage_min <= 3.5 and 3.0 <= voltage_max <= 3.5:
-                    print(f"    ✓ Voltage range normal (3.0-3.5V)")
+                    print("    ✓ Voltage range normal (3.0-3.5V)")
                 elif 2.5 <= voltage_min <= 4.0 and 2.5 <= voltage_max <= 4.0:
                     print(
                         f"    ⚠ Voltage range somewhat abnormal but acceptable: {voltage_min:.3f}-{voltage_max:.3f} V")
@@ -803,7 +803,7 @@ class CSVDataVisualizer:
                         print(f"    ⚠ Found {large_jumps} large voltage jumps (>0.1V) ({jump_pct:.2f}%)")
                         quality_report['quality_score'] -= 5
             else:
-                print(f"  Voltage quality check: No voltage data available")
+                print("  Voltage quality check: No voltage data available")
                 quality_report['quality_score'] -= 30
 
         # 检查时间序列连续性
@@ -814,7 +814,7 @@ class CSVDataVisualizer:
                 negative_steps = np.sum(time_diff < 0)
 
                 if negative_steps > 0:
-                    print(f"  Time continuity check:")
+                    print("  Time continuity check:")
                     print(f"    ⚠ Found {negative_steps} negative time steps (time going backwards)")
                     quality_report['quality_score'] -= 10
 
@@ -824,13 +824,13 @@ class CSVDataVisualizer:
         print(f"\n  📊 Raw Data Quality Score: {quality_report['quality_score']}/100")
 
         if quality_report['quality_score'] >= 90:
-            print(f"  ✅ Excellent raw data quality")
+            print("  ✅ Excellent raw data quality")
         elif quality_report['quality_score'] >= 75:
-            print(f"  ⚠ Good raw data quality, minor issues")
+            print("  ⚠ Good raw data quality, minor issues")
         elif quality_report['quality_score'] >= 60:
-            print(f"  ⚠ Average raw data quality, check recommended")
+            print("  ⚠ Average raw data quality, check recommended")
         else:
-            print(f"  ❌ Poor raw data quality, preprocessing needed")
+            print("  ❌ Poor raw data quality, preprocessing needed")
 
         return quality_report
 
@@ -856,7 +856,7 @@ class CSVDataVisualizer:
             if self.df is not None and len(self.df.columns) > 0:
                 f.write(f"    Feature List: {list(self.df.columns)}\n\n")
             else:
-                f.write(f"    Feature List: No data\n\n")
+                f.write("    Feature List: No data\n\n")
 
             f.write("2. Data Quality Checks\n")
             f.write(
@@ -867,7 +867,7 @@ class CSVDataVisualizer:
             if self.df is not None and 'stack_voltage' in self.df.columns:
                 voltage_data = self.df['stack_voltage'].dropna()
                 if len(voltage_data) > 0:
-                    f.write(f"    Voltage Statistics:\n")
+                    f.write("    Voltage Statistics:\n")
                     f.write(f"        Min: {voltage_data.min():.3f} V\n")
                     f.write(f"        Max: {voltage_data.max():.3f} V\n")
                     f.write(f"        Mean: {voltage_data.mean():.3f} V\n")
@@ -990,7 +990,7 @@ def main():
 
         print(f"\n{'=' * 60}")
         print("All CSV raw data analysis completed!")
-        print(f"Visualization results saved to: csv_raw_visualization/")
+        print("Visualization results saved to: csv_raw_visualization/")
         print(f"{'=' * 60}")
     else:
         print(f"\n{'=' * 60}")

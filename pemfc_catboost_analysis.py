@@ -10,12 +10,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.model_selection import train_test_split
-from catboost import CatBoostRegressor
+from catboost import CatBoostRegressor  # pyright: ignore[reportMissingImports]
 import warnings
-import textwrap
 from datetime import datetime
-import seaborn as sns
+import seaborn as sns  # pyright: ignore[reportMissingModuleSource]
 
 # 避免Windows终端GBK编码报错，强制UTF-8输出
 os.environ.setdefault("PYTHONIOENCODING", "utf-8")
@@ -219,7 +217,6 @@ def preprocess_data(df, target_col='stack_voltage'):
     # 由于是时间序列数据，按时间顺序划分
     train_ratio = 0.7
     val_ratio = 0.15
-    test_ratio = 0.15
 
     n_samples = len(X)
     train_end = int(n_samples * train_ratio)
@@ -238,7 +235,7 @@ def preprocess_data(df, target_col='stack_voltage'):
     print(f"  Total samples: {n_samples}")
     print(f"  Number of features: {len(feature_cols)}")
     print(f"  Feature list: {feature_cols}")
-    print(f"  Target variable statistics:")
+    print("  Target variable statistics:")
     print(f"    Minimum: {y.min():.4f} V")
     print(f"    Maximum: {y.max():.4f} V")
     print(f"    Mean: {y.mean():.4f} V")
@@ -512,8 +509,8 @@ def save_results_and_report(importance_df, model_metrics, data_dict,
         f.write("=" * 80 + "\n\n")
 
         f.write(f"Analysis Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-        f.write(f"Dataset: FC1 (IEEE PHM 2014 Data Challenge)\n")
-        f.write(f"Analysis Method: CatBoost Feature Importance Analysis\n\n")
+        f.write("Dataset: FC1 (IEEE PHM 2014 Data Challenge)\n")
+        f.write("Analysis Method: CatBoost Feature Importance Analysis\n\n")
 
         # 数据基本信息
         f.write("1. Data Basic Information\n")
@@ -551,7 +548,7 @@ def save_results_and_report(importance_df, model_metrics, data_dict,
         top_3_features = importance_df.head(3)['feature'].tolist()
         top_3_percent = importance_df.head(3)['importance_percent'].tolist()
 
-        f.write(f"(1) Top three most important monitoring parameters:\n")
+        f.write("(1) Top three most important monitoring parameters:\n")
         for i, (feat, perc) in enumerate(zip(top_3_features, top_3_percent), 1):
             f.write(f"    #{i}: {feat} ({perc:.1f}%)\n")
 
@@ -569,11 +566,11 @@ def save_results_and_report(importance_df, model_metrics, data_dict,
 
             # 判断是否与论文一致
             if air_outlet_flow_rank == 1:
-                f.write(f"    ✓ Consistent with paper conclusion: air outlet flow is the most important parameter.\n")
+                f.write("    ✓ Consistent with paper conclusion: air outlet flow is the most important parameter.\n")
             elif air_outlet_flow_rank <= 3:
-                f.write(f"    ✓ Partially consistent: air outlet flow is among the top 3 important parameters.\n")
+                f.write("    ✓ Partially consistent: air outlet flow is among the top 3 important parameters.\n")
             else:
-                f.write(f"    ⚠ Not fully consistent: air outlet flow is not among the top 3 parameters.\n")
+                f.write("    ⚠ Not fully consistent: air outlet flow is not among the top 3 parameters.\n")
         else:
             f.write("    ⚠ Note: Air outlet flow parameter not found in our data.\n")
 
@@ -633,7 +630,7 @@ def save_results_and_report(importance_df, model_metrics, data_dict,
             print(f"2. Cumulative importance of top 5 features: {top_5_cumulative:.1f}%")
 
     # 基于论文选择参数
-    print(f"3. Recommended parameters for prediction model (based on paper):")
+    print("3. Recommended parameters for prediction model (based on paper):")
     paper_params_display = ['Time', 'Stack Voltage', 'Current', 'Current Density',
                            'Hydrogen Inlet Temperature', 'Coolant Flow', 'Air Outlet Flow']
     for i, param in enumerate(paper_params_display, 1):
@@ -724,7 +721,7 @@ def main():
         print("Analysis Complete!")
         print("=" * 80)
 
-        print(f"\nGenerated Files:")
+        print("\nGenerated Files:")
         print(f"  1. Feature importance results (CSV): {csv_path}")
         print(f"  2. Detailed analysis report (TXT): {report_path}")
 
@@ -741,13 +738,13 @@ def main():
             percent = importance_df[importance_df['feature'] == 'air_outlet_flow']['importance_percent'].values[0]
             print(f"  Air outlet flow rank: #{rank} ({percent:.1f}%)")
             if rank == 1:
-                print(f"  ✓ Consistent with paper conclusion")
+                print("  ✓ Consistent with paper conclusion")
             elif rank <= 3:
-                print(f"  ✓ Partially consistent (top 3)")
+                print("  ✓ Partially consistent (top 3)")
             else:
-                print(f"  ⚠ Not fully consistent")
+                print("  ⚠ Not fully consistent")
         else:
-            print(f"  ⚠ Air outlet flow parameter not included in data")
+            print("  ⚠ Air outlet flow parameter not included in data")
 
         print("\nNote: U1-U5 individual cell voltage columns have been excluded from analysis")
         print("      (their sum equals stack voltage, which would cause information leakage).")

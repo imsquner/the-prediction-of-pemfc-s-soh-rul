@@ -98,3 +98,72 @@
 2025-12-12 05:36:38,901 - PEMFC_GRU_Training_Paper - INFO - FC1 残差校正: slope=2.596431, intercept=-5.111299, RMSE_adj=0.005469
 2025-12-12 05:36:38,938 - PEMFC_GRU_Training_Paper - INFO - 预测结果保存到: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\csv_files\predictions.csv
 2025-12-12 05:36:38,942 - PEMFC_GRU_Training_Paper - INFO - 滚动预测: 起点=1154.213h, 目标=2200.0h, 基础步长=0.0084h, 步数=124499
+2025-12-12 05:49:30,782 - PEMFC_GRU_Training_Paper - INFO - 滚动多步预测完成，共 124499 步，结果保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\csv_files\future_rollout.csv
+2025-12-12 05:49:30,797 - PEMFC_GRU_Training_Paper - INFO - 计算SOH和RUL...
+2025-12-12 05:49:30,803 - PEMFC_GRU_Training_Paper - INFO - 使用稳定段均值计算V_initial（波动<0.5%）
+2025-12-12 05:49:30,806 - PEMFC_GRU_Training_Paper - INFO - 计算出的V_initial: 3.2228V (稳定段长度=14307, 起点=0)
+2025-12-12 05:49:30,806 - PEMFC_GRU_Training_Paper - INFO - RUL计算使用预测缩放因子: 0.9950 (V_initial保持未缩放)
+2025-12-12 05:49:30,806 - PEMFC_GRU_Training_Paper - INFO - 对齐后：真实电压长度=14307, 预测长度=14307, 时间长度=14307
+2025-12-12 05:49:30,807 - PEMFC_GRU_Training_Paper - INFO - 比较真实和预测的RUL
+2025-12-12 05:49:30,809 - PEMFC_GRU_Training_Paper - INFO - 使用稳定段均值计算V_initial（波动<0.5%）
+2025-12-12 05:49:30,811 - PEMFC_GRU_Training_Paper - INFO - 计算出的V_initial: 3.2228V (稳定段长度=14307, 起点=0)
+2025-12-12 05:49:30,812 - PEMFC_GRU_Training_Paper - INFO - 使用线性插值计算RUL
+2025-12-12 05:49:30,813 - PEMFC_GRU_Training_Paper - INFO - SOH序列形状: (14307,), 时间序列形状: (14307,)
+2025-12-12 05:49:30,813 - PEMFC_GRU_Training_Paper - INFO - 处理后形状 - SOH: (14307,), 时间: (14307,)
+2025-12-12 05:49:30,814 - PEMFC_GRU_Training_Paper - INFO - 所有SOH值都高于阈值，电池尚未显著退化
+2025-12-12 05:49:30,834 - PEMFC_GRU_Training_Paper - INFO - 外推的RUL: 659.23h (斜率=-0.000056)
+2025-12-12 05:49:30,834 - PEMFC_GRU_Training_Paper - INFO - 使用线性插值计算RUL
+2025-12-12 05:49:30,835 - PEMFC_GRU_Training_Paper - INFO - SOH序列形状: (14307,), 时间序列形状: (14307,)
+2025-12-12 05:49:30,835 - PEMFC_GRU_Training_Paper - INFO - 处理后形状 - SOH: (14307,), 时间: (14307,)
+2025-12-12 05:49:30,835 - PEMFC_GRU_Training_Paper - INFO - 所有SOH值都高于阈值，电池尚未显著退化
+2025-12-12 05:49:30,835 - PEMFC_GRU_Training_Paper - INFO - 外推的RUL: 1314.42h (斜率=-0.000025)
+2025-12-12 05:49:30,837 - PEMFC_GRU_Training_Paper - INFO - 真实RUL: 659.23h
+2025-12-12 05:49:30,837 - PEMFC_GRU_Training_Paper - INFO - 预测RUL: 1314.42h
+2025-12-12 05:49:30,838 - PEMFC_GRU_Training_Paper - INFO - RUL MAE: 655.19h
+2025-12-12 05:49:30,838 - PEMFC_GRU_Training_Paper - INFO - RUL MAPE: 99.39%
+2025-12-12 05:49:30,838 - PEMFC_GRU_Training_Paper - INFO - PHM评分: 7729815667141785944064.0000
+2025-12-12 05:49:30,839 - PEMFC_GRU_Training_Paper - INFO - 开始在FC2数据上进行跨数据集预测...
+2025-12-12 05:49:30,839 - PEMFC_GRU_Training_Paper - INFO - 加载 FC2 数据用于推理: processed_results\FC2
+2025-12-12 05:49:30,840 - PEMFC_GRU_Training_Paper - INFO - 步骤1: 加载数据并使用预定义特征
+2025-12-12 05:49:30,840 - PEMFC_GRU_Training_Paper - INFO - 在目录中搜索最新数据文件: processed_results\FC2
+2025-12-12 05:49:30,843 - PEMFC_GRU_Training_Paper - INFO - 在目录中找到 1 个.npz文件
+2025-12-12 05:49:30,844 - PEMFC_GRU_Training_Paper - INFO - 找到 1 个匹配模式的文件
+2025-12-12 05:49:30,852 - PEMFC_GRU_Training_Paper - INFO - 按时间戳选择最新文件: FC2_processed_20251209_002355.npz
+2025-12-12 05:49:30,852 - PEMFC_GRU_Training_Paper - INFO - 使用数据文件: processed_results\FC2\FC2_processed_20251209_002355.npz
+2025-12-12 05:49:30,852 - PEMFC_GRU_Training_Paper - INFO - 使用数据文件: processed_results\FC2\FC2_processed_20251209_002355.npz
+2025-12-12 05:49:30,872 - PEMFC_GRU_Training_Paper - INFO - NPZ文件中的所有特征: ['time', 'stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+2025-12-12 05:49:30,889 - PEMFC_GRU_Training_Paper - INFO - 数据长度: 127370
+2025-12-12 05:49:30,976 - PEMFC_GRU_Training_Paper - INFO - 原始数据加载: 127370 行, 20 列
+2025-12-12 05:49:31,012 - PEMFC_GRU_Training_Paper - INFO - 选定的特征（排除目标）: ['air_outlet_flow', 'hydrogen_inlet_temp', 'current', 'coolant_flow', 'current_density', 'time']
+2025-12-12 05:49:31,012 - PEMFC_GRU_Training_Paper - INFO - 选定数据形状: (127370, 7)
+2025-12-12 05:49:31,016 - PEMFC_GRU_Training_Paper - INFO - 步骤2: 跳过小波去噪（enable_wavelet=False）
+2025-12-12 05:49:31,064 - PEMFC_GRU_Training_Paper - INFO - FC2 使用独立标准化器完成缩放
+2025-12-12 05:49:31,064 - PEMFC_GRU_Training_Paper - INFO - 步骤3: 创建序列，窗口大小 80
+2025-12-12 05:49:31,300 - PEMFC_GRU_Training_Paper - INFO - 创建了 127290 个序列
+2025-12-12 05:49:56,829 - PEMFC_GRU_Training_Paper - INFO - FC2 指标: {'MAE': 0.019275, 'RMSE': 0.024784, 'MAPE': 0.599547, 'R2': 0.651061}
+2025-12-12 05:49:56,865 - PEMFC_GRU_Training_Paper - INFO - FC2 残差校正: slope=0.788045, intercept=0.678173, RMSE_adj=0.022376
+2025-12-12 05:49:56,874 - PEMFC_GRU_Training_Paper - INFO - FC2 未来滚动: last_time=1020.528, dt=0.008390, steps=140581
+2025-12-12 06:03:00,260 - PEMFC_GRU_Training_Paper - INFO - FC2 未来段应用残差校正: slope=0.788045, intercept=0.678173
+2025-12-12 06:03:00,286 - PEMFC_GRU_Training_Paper - INFO - FC2 未来段连续性校正: 对未来序列整体平移 -0.010705 以衔接测试末点 (raw预测对齐)
+2025-12-12 06:03:02,478 - PEMFC_GRU_Training_Paper - INFO - FC2 全时间轴预测保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\csv_files\fc2_full_with_future.csv
+2025-12-12 06:03:03,823 - PEMFC_GRU_Training_Paper - INFO - FC2 全时间轴预测图保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\images\fc2_full_prediction.png
+2025-12-12 06:03:07,085 - PEMFC_GRU_Training_Paper - INFO - 预测结果汇总保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\csv_files\predictions.csv
+2025-12-12 06:03:07,092 - PEMFC_GRU_Training_Paper - INFO - 综合指标保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\tables\metrics_overall.csv
+2025-12-12 06:03:07,092 - PEMFC_GRU_Training_Paper - INFO - 生成可视化图表...
+2025-12-12 06:03:07,102 - PEMFC_GRU_Training_Paper - INFO - 字体设置成功，使用: Microsoft YaHei
+2025-12-12 06:03:07,104 - PEMFC_GRU_Training_Paper - INFO - 绘制训练历史
+2025-12-12 06:03:09,548 - PEMFC_GRU_Training_Paper - INFO - 训练历史图保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\images\training_history.png
+2025-12-12 06:03:09,548 - PEMFC_GRU_Training_Paper - INFO - 绘制电压预测对比图（单幅图）
+2025-12-12 06:03:09,549 - PEMFC_GRU_Training_Paper - INFO - 绘图输入形状 - true_voltage: (143862,), pred_voltage: (143862,), time_series: (143862,)
+2025-12-12 06:03:10,170 - PEMFC_GRU_Training_Paper - INFO - 电压预测图保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\images\voltage_prediction.png
+2025-12-12 06:03:10,172 - PEMFC_GRU_Training_Paper - INFO - 绘制SOH和RUL曲线
+2025-12-12 06:03:10,172 - PEMFC_GRU_Training_Paper - INFO - 使用稳定段均值计算V_initial（波动<0.5%）
+2025-12-12 06:03:10,173 - PEMFC_GRU_Training_Paper - INFO - 计算出的V_initial: 3.2228V (稳定段长度=14307, 起点=0)
+2025-12-12 06:03:10,173 - PEMFC_GRU_Training_Paper - INFO - 使用稳定段均值计算V_initial（波动<0.5%）
+2025-12-12 06:03:10,175 - PEMFC_GRU_Training_Paper - INFO - 计算出的V_initial: 3.2067V (稳定段长度=14307, 起点=0)
+2025-12-12 06:03:11,165 - PEMFC_GRU_Training_Paper - INFO - SOH/RUL曲线图保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\images\soh_rul_curve.png
+2025-12-12 06:03:11,165 - PEMFC_GRU_Training_Paper - INFO - 生成最终报告...
+2025-12-12 06:03:11,169 - PEMFC_GRU_Training_Paper - INFO - 最终报告保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\configs\final_report.json
+2025-12-12 06:03:11,170 - PEMFC_GRU_Training_Paper - INFO - ================================================================================
+2025-12-12 06:03:11,170 - PEMFC_GRU_Training_Paper - INFO - 训练和评估成功完成!
+2025-12-12 06:03:11,170 - PEMFC_GRU_Training_Paper - INFO - ================================================================================

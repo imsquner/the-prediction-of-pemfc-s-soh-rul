@@ -1,0 +1,355 @@
+2025-12-12 12:49:09,770 - PEMFC_GRU_Training_Paper - INFO - ================================================================================
+2025-12-12 12:49:09,770 - PEMFC_GRU_Training_Paper - INFO - PEMFC燃料电池GRU寿命预测模型（论文版本）
+2025-12-12 12:49:09,770 - PEMFC_GRU_Training_Paper - INFO - 开始时间: 2025-12-12 12:49:09
+2025-12-12 12:49:09,770 - PEMFC_GRU_Training_Paper - INFO - ================================================================================
+2025-12-12 12:49:09,770 - PEMFC_GRU_Training_Paper - INFO - [模型配置参数]
+2025-12-12 12:49:09,770 - PEMFC_GRU_Training_Paper - INFO -   data_path: processed_results/FC1/
+2025-12-12 12:49:09,770 - PEMFC_GRU_Training_Paper - INFO -   data_file_pattern: *_processed_*.npz
+2025-12-12 12:49:09,770 - PEMFC_GRU_Training_Paper - INFO -   data_file_suffix: _processed
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   target_feature: stack_voltage
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   sequence_length: 80
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   selected_features: [5 个元素] air_outlet_flow, hydrogen_inlet_temp, current, coolant_flow, current_density
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   missing_value_method: linear
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   outlier_method: 3sigma
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   outlier_sigma: 3.0
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   wavelet_method: sym8
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   wavelet_level: 4
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   wavelet_threshold_percentile: 70
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   enable_wavelet: False
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   train_ratio: 0.8
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   val_ratio: 0.1
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   test_ratio: 0.1
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   forecast_steps: 200
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   forecast_horizon: 2200.0
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   forecast_max_steps: 200000
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   fixed_dt: 0.0084
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   gru_hidden_size: 256
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   gru_num_layers: 2
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   dropout_rate: 0.1
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   bidirectional: False
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   fc_hidden_sizes: [2 个元素] 32, 16
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   batch_size: 32
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   epochs: 45
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   learning_rate: 0.0006
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   weight_decay: 0.001
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   patience: 30
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   lr_decay_factor: 0.7
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   lr_patience: 5
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   grad_clip: 0.5
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   slope_loss_weight: 0.2
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   variance_loss_weight: 0.45
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   apply_fc1_bias_correction: True
+2025-12-12 12:49:09,771 - PEMFC_GRU_Training_Paper - INFO -   fc1_bias_correction: 0.0138
+2025-12-12 12:49:09,772 - PEMFC_GRU_Training_Paper - INFO -   rul_prediction_scale: 0.995
+2025-12-12 12:49:09,772 - PEMFC_GRU_Training_Paper - INFO -   soh_threshold: 0.96
+2025-12-12 12:49:09,772 - PEMFC_GRU_Training_Paper - INFO -   v_initial_window: 100
+2025-12-12 12:49:09,772 - PEMFC_GRU_Training_Paper - INFO -   cv_threshold: 0.01
+2025-12-12 12:49:09,772 - PEMFC_GRU_Training_Paper - INFO -   denoising_method: wavelet
+2025-12-12 12:49:09,772 - PEMFC_GRU_Training_Paper - INFO -   device: cuda
+2025-12-12 12:49:09,772 - PEMFC_GRU_Training_Paper - INFO -   save_dir: train_results_paper
+2025-12-12 12:49:09,772 - PEMFC_GRU_Training_Paper - INFO -   experiment_name: gru_pemfc_paper_experiment_fixed_r2_rul
+2025-12-12 12:49:09,772 - PEMFC_GRU_Training_Paper - INFO - ================================================================================
+2025-12-12 12:49:09,772 - PEMFC_GRU_Training_Paper - INFO - ================================================================================
+2025-12-12 12:49:09,772 - PEMFC_GRU_Training_Paper - INFO - PEMFC燃料电池GRU寿命预测训练
+2025-12-12 12:49:09,772 - PEMFC_GRU_Training_Paper - INFO - ================================================================================
+2025-12-12 12:49:09,772 - PEMFC_GRU_Training_Paper - INFO - 开始数据准备...
+2025-12-12 12:49:09,772 - PEMFC_GRU_Training_Paper - INFO - 步骤1: 加载数据并使用预定义特征
+2025-12-12 12:49:09,772 - PEMFC_GRU_Training_Paper - INFO - 在目录中搜索最新数据文件: processed_results/FC1/
+2025-12-12 12:49:09,773 - PEMFC_GRU_Training_Paper - INFO - 在目录中找到 2 个.npz文件
+2025-12-12 12:49:09,773 - PEMFC_GRU_Training_Paper - INFO - 找到 2 个匹配模式的文件
+2025-12-12 12:49:09,773 - PEMFC_GRU_Training_Paper - INFO - 按时间戳选择最新文件: FC1_processed_20251209_200621.npz
+2025-12-12 12:49:09,773 - PEMFC_GRU_Training_Paper - INFO - 使用数据文件: processed_results/FC1/FC1_processed_20251209_200621.npz
+2025-12-12 12:49:09,773 - PEMFC_GRU_Training_Paper - INFO - 使用数据文件: processed_results/FC1/FC1_processed_20251209_200621.npz
+2025-12-12 12:49:09,777 - PEMFC_GRU_Training_Paper - INFO - NPZ文件中的所有特征: ['time', 'stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+2025-12-12 12:49:09,780 - PEMFC_GRU_Training_Paper - INFO - 数据长度: 143862
+2025-12-12 12:49:09,831 - PEMFC_GRU_Training_Paper - INFO - 原始数据加载: 143862 行, 20 列
+2025-12-12 12:49:09,835 - PEMFC_GRU_Training_Paper - INFO - 选定的特征（排除目标）: ['air_outlet_flow', 'hydrogen_inlet_temp', 'current', 'coolant_flow', 'current_density', 'time']
+2025-12-12 12:49:09,835 - PEMFC_GRU_Training_Paper - INFO - 选定数据形状: (143862, 7)
+2025-12-12 12:49:09,837 - PEMFC_GRU_Training_Paper - INFO - 检查数据完整性...
+2025-12-12 12:49:09,837 - PEMFC_GRU_Training_Paper - INFO - 加载后的数据列: ['air_outlet_flow', 'hydrogen_inlet_temp', 'current', 'coolant_flow', 'current_density', 'stack_voltage', 'time']
+2025-12-12 12:49:09,839 - PEMFC_GRU_Training_Paper - INFO - 数据类型: {'air_outlet_flow': dtype('float64'), 'hydrogen_inlet_temp': dtype('float64'), 'current': dtype('float64'), 'coolant_flow': dtype('float64'), 'current_density': dtype('float64'), 'stack_voltage': dtype('float64'), 'time': dtype('float64')}
+2025-12-12 12:49:09,839 - PEMFC_GRU_Training_Paper - INFO - 步骤2: 跳过小波去噪（enable_wavelet=False）
+2025-12-12 12:49:09,839 - PEMFC_GRU_Training_Paper - INFO - 步骤4: 按时间顺序划分数据
+2025-12-12 12:49:09,839 - PEMFC_GRU_Training_Paper - INFO - 划分前的数据列: ['air_outlet_flow', 'hydrogen_inlet_temp', 'current', 'coolant_flow', 'current_density', 'stack_voltage', 'time']
+2025-12-12 12:49:09,845 - PEMFC_GRU_Training_Paper - INFO - 数据按时间排序。时间范围: 0.0h 到 1154.2h
+2025-12-12 12:49:09,845 - PEMFC_GRU_Training_Paper - INFO - 训练集: 115089 个样本 (0.0h - 912.8h)
+2025-12-12 12:49:09,845 - PEMFC_GRU_Training_Paper - INFO - 验证集: 14386 个样本 (912.8h - 1033.5h)
+2025-12-12 12:49:09,845 - PEMFC_GRU_Training_Paper - INFO - 测试集: 14387 个样本 (1033.5h - 1154.2h)
+2025-12-12 12:49:09,847 - PEMFC_GRU_Training_Paper - INFO - 步骤5: 标准化特征与目标
+2025-12-12 12:49:09,852 - PEMFC_GRU_Training_Paper - INFO - 特征标准化器均值范围: 0.7022~431.6125, 标准差范围: 0.0003~276.2939
+2025-12-12 12:49:09,853 - PEMFC_GRU_Training_Paper - INFO - 目标标准化器均值: 3.2815, 标准差: 0.039852
+2025-12-12 12:49:09,857 - PEMFC_GRU_Training_Paper - INFO - 步骤3: 创建序列，窗口大小 80
+2025-12-12 12:49:10,045 - PEMFC_GRU_Training_Paper - INFO - 创建了 115009 个序列
+2025-12-12 12:49:10,046 - PEMFC_GRU_Training_Paper - INFO - 步骤3: 创建序列，窗口大小 80
+2025-12-12 12:49:10,063 - PEMFC_GRU_Training_Paper - INFO - 创建了 14306 个序列
+2025-12-12 12:49:10,063 - PEMFC_GRU_Training_Paper - INFO - 步骤3: 创建序列，窗口大小 80
+2025-12-12 12:49:10,080 - PEMFC_GRU_Training_Paper - INFO - 创建了 14307 个序列
+2025-12-12 12:49:10,083 - PEMFC_GRU_Training_Paper - INFO - 训练特征范围: min=0.0000~max=912.8310
+2025-12-12 12:49:10,087 - PEMFC_GRU_Training_Paper - INFO - ✓ 数据划分和预处理 完成
+2025-12-12 12:49:10,163 - PEMFC_GRU_Training_Paper - INFO - DataLoader创建完成: 训练集=3595批次, 验证集=448批次, 测试集=448批次
+2025-12-12 12:49:10,164 - PEMFC_GRU_Training_Paper - INFO - ✓ 数据准备 完成
+2025-12-12 12:49:10,164 - PEMFC_GRU_Training_Paper - INFO - 构建GRU模型，输入维度: 6
+2025-12-12 12:49:10,286 - PEMFC_GRU_Training_Paper - INFO - 模型参数: 总计=606,273, 可训练=606,273
+2025-12-12 12:49:16,434 - PEMFC_GRU_Training_Paper - INFO - 开始模型训练...
+2025-12-12 12:49:16,434 - PEMFC_GRU_Training_Paper - INFO - 设备: cuda
+2025-12-12 12:49:49,147 - PEMFC_GRU_Training_Paper - INFO - Epoch 001/045 | 训练损失: 0.062662, 验证损失: 0.061554 | 学习率: 0.000600
+2025-12-12 12:49:49,147 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1776, RMSE: 0.2429, MAPE: 143.9192, R2: 0.9410
+2025-12-12 12:49:49,147 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.3090, RMSE: 0.3510, MAPE: 26.8298, R2: -0.1323
+2025-12-12 12:49:49,166 - PEMFC_GRU_Training_Paper - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\models\best_model.pth (输入维度: 6)
+2025-12-12 12:49:49,166 - PEMFC_GRU_Training_Paper - INFO - ✓ 最佳模型已保存 (epoch 1, 验证损失: 0.061554)
+2025-12-12 12:50:21,315 - PEMFC_GRU_Training_Paper - INFO - Epoch 002/045 | 训练损失: 0.040616, 验证损失: 0.045903 | 学习率: 0.000600
+2025-12-12 12:50:21,315 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1453, RMSE: 0.1986, MAPE: 75.0045, R2: 0.9606
+2025-12-12 12:50:21,315 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.2034, RMSE: 0.3034, MAPE: 18.3227, R2: 0.1540
+2025-12-12 12:50:21,324 - PEMFC_GRU_Training_Paper - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\models\best_model.pth (输入维度: 6)
+2025-12-12 12:50:21,324 - PEMFC_GRU_Training_Paper - INFO - ✓ 最佳模型已保存 (epoch 2, 验证损失: 0.045903)
+2025-12-12 12:50:53,201 - PEMFC_GRU_Training_Paper - INFO - Epoch 003/045 | 训练损失: 0.033124, 验证损失: 0.029164 | 学习率: 0.000600
+2025-12-12 12:50:53,201 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1313, RMSE: 0.1800, MAPE: 68.9735, R2: 0.9676
+2025-12-12 12:50:53,201 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.2024, RMSE: 0.2416, MAPE: 17.6823, R2: 0.4636
+2025-12-12 12:50:53,210 - PEMFC_GRU_Training_Paper - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\models\best_model.pth (输入维度: 6)
+2025-12-12 12:50:53,210 - PEMFC_GRU_Training_Paper - INFO - ✓ 最佳模型已保存 (epoch 3, 验证损失: 0.029164)
+2025-12-12 12:51:30,976 - PEMFC_GRU_Training_Paper - INFO - Epoch 004/045 | 训练损失: 0.030290, 验证损失: 0.032297 | 学习率: 0.000600
+2025-12-12 12:51:30,976 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1253, RMSE: 0.1721, MAPE: 65.8773, R2: 0.9704
+2025-12-12 12:51:30,976 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.2228, RMSE: 0.2543, MAPE: 18.5381, R2: 0.4058
+2025-12-12 12:52:03,407 - PEMFC_GRU_Training_Paper - INFO - Epoch 005/045 | 训练损失: 0.027873, 验证损失: 0.038045 | 学习率: 0.000600
+2025-12-12 12:52:03,408 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1197, RMSE: 0.1651, MAPE: 57.5911, R2: 0.9728
+2025-12-12 12:52:03,408 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.2341, RMSE: 0.2759, MAPE: 19.8736, R2: 0.3004
+2025-12-12 12:52:39,164 - PEMFC_GRU_Training_Paper - INFO - Epoch 006/045 | 训练损失: 0.026745, 验证损失: 0.065882 | 学习率: 0.000600
+2025-12-12 12:52:39,165 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1171, RMSE: 0.1622, MAPE: 53.3479, R2: 0.9737
+2025-12-12 12:52:39,165 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.2651, RMSE: 0.3631, MAPE: 24.2051, R2: -0.2119
+2025-12-12 12:53:14,650 - PEMFC_GRU_Training_Paper - INFO - Epoch 007/045 | 训练损失: 0.025741, 验证损失: 0.031378 | 学习率: 0.000600
+2025-12-12 12:53:14,650 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1149, RMSE: 0.1589, MAPE: 47.7502, R2: 0.9747
+2025-12-12 12:53:14,650 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.2072, RMSE: 0.2506, MAPE: 18.3762, R2: 0.4230
+2025-12-12 12:53:52,877 - PEMFC_GRU_Training_Paper - INFO - Epoch 008/045 | 训练损失: 0.025124, 验证损失: 0.022860 | 学习率: 0.000600
+2025-12-12 12:53:52,877 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1127, RMSE: 0.1567, MAPE: 56.0849, R2: 0.9754
+2025-12-12 12:53:52,877 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1666, RMSE: 0.2139, MAPE: 14.8623, R2: 0.5795
+2025-12-12 12:53:52,886 - PEMFC_GRU_Training_Paper - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\models\best_model.pth (输入维度: 6)
+2025-12-12 12:53:52,886 - PEMFC_GRU_Training_Paper - INFO - ✓ 最佳模型已保存 (epoch 8, 验证损失: 0.022860)
+2025-12-12 12:54:24,124 - PEMFC_GRU_Training_Paper - INFO - Epoch 009/045 | 训练损失: 0.023744, 验证损失: 0.032817 | 学习率: 0.000600
+2025-12-12 12:54:24,125 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1100, RMSE: 0.1532, MAPE: 44.5584, R2: 0.9765
+2025-12-12 12:54:24,125 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.2124, RMSE: 0.2562, MAPE: 19.0477, R2: 0.3966
+2025-12-12 12:54:55,763 - PEMFC_GRU_Training_Paper - INFO - Epoch 010/045 | 训练损失: 0.023413, 验证损失: 0.027930 | 学习率: 0.000600
+2025-12-12 12:54:55,763 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1092, RMSE: 0.1520, MAPE: 44.1585, R2: 0.9769
+2025-12-12 12:54:55,763 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1975, RMSE: 0.2364, MAPE: 16.5729, R2: 0.4862
+2025-12-12 12:55:23,313 - PEMFC_GRU_Training_Paper - INFO - Epoch 011/045 | 训练损失: 0.022755, 验证损失: 0.019496 | 学习率: 0.000600
+2025-12-12 12:55:23,313 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1072, RMSE: 0.1495, MAPE: 38.2124, R2: 0.9777
+2025-12-12 12:55:23,313 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1578, RMSE: 0.1976, MAPE: 14.4069, R2: 0.6412
+2025-12-12 12:55:23,323 - PEMFC_GRU_Training_Paper - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\models\best_model.pth (输入维度: 6)
+2025-12-12 12:55:23,323 - PEMFC_GRU_Training_Paper - INFO - ✓ 最佳模型已保存 (epoch 11, 验证损失: 0.019496)
+2025-12-12 12:55:51,574 - PEMFC_GRU_Training_Paper - INFO - Epoch 012/045 | 训练损失: 0.022192, 验证损失: 0.026779 | 学习率: 0.000600
+2025-12-12 12:55:51,575 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1054, RMSE: 0.1478, MAPE: 43.7978, R2: 0.9782
+2025-12-12 12:55:51,575 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1949, RMSE: 0.2316, MAPE: 17.0684, R2: 0.5072
+2025-12-12 12:56:19,474 - PEMFC_GRU_Training_Paper - INFO - Epoch 013/045 | 训练损失: 0.021914, 验证损失: 0.021038 | 学习率: 0.000600
+2025-12-12 12:56:19,474 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1050, RMSE: 0.1469, MAPE: 39.7280, R2: 0.9784
+2025-12-12 12:56:19,474 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1675, RMSE: 0.2053, MAPE: 14.1540, R2: 0.6126
+2025-12-12 12:56:46,989 - PEMFC_GRU_Training_Paper - INFO - Epoch 014/045 | 训练损失: 0.021171, 验证损失: 0.029819 | 学习率: 0.000600
+2025-12-12 12:56:46,989 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1032, RMSE: 0.1449, MAPE: 38.0627, R2: 0.9790
+2025-12-12 12:56:46,989 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1922, RMSE: 0.2443, MAPE: 17.8240, R2: 0.4515
+2025-12-12 12:57:14,758 - PEMFC_GRU_Training_Paper - INFO - Epoch 015/045 | 训练损失: 0.021326, 验证损失: 0.030505 | 学习率: 0.000600
+2025-12-12 12:57:14,759 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1032, RMSE: 0.1446, MAPE: 37.8224, R2: 0.9791
+2025-12-12 12:57:14,759 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.2142, RMSE: 0.2472, MAPE: 17.7766, R2: 0.4385
+2025-12-12 12:57:42,094 - PEMFC_GRU_Training_Paper - INFO - Epoch 016/045 | 训练损失: 0.020312, 验证损失: 0.028468 | 学习率: 0.000600
+2025-12-12 12:57:42,094 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1012, RMSE: 0.1414, MAPE: 36.9794, R2: 0.9800
+2025-12-12 12:57:42,094 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1917, RMSE: 0.2387, MAPE: 17.3794, R2: 0.4764
+2025-12-12 12:58:12,225 - PEMFC_GRU_Training_Paper - INFO - Epoch 017/045 | 训练损失: 0.021039, 验证损失: 0.019653 | 学习率: 0.000420
+2025-12-12 12:58:12,225 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.1030, RMSE: 0.1440, MAPE: 39.1939, R2: 0.9793
+2025-12-12 12:58:12,225 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1645, RMSE: 0.1984, MAPE: 13.7624, R2: 0.6381
+2025-12-12 12:58:43,877 - PEMFC_GRU_Training_Paper - INFO - Epoch 018/045 | 训练损失: 0.019217, 验证损失: 0.021279 | 学习率: 0.000420
+2025-12-12 12:58:43,877 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0985, RMSE: 0.1382, MAPE: 37.0300, R2: 0.9809
+2025-12-12 12:58:43,877 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1728, RMSE: 0.2065, MAPE: 14.5382, R2: 0.6081
+2025-12-12 12:59:15,682 - PEMFC_GRU_Training_Paper - INFO - Epoch 019/045 | 训练损失: 0.018893, 验证损失: 0.018998 | 学习率: 0.000420
+2025-12-12 12:59:15,682 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0983, RMSE: 0.1374, MAPE: 36.6918, R2: 0.9811
+2025-12-12 12:59:15,712 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1556, RMSE: 0.1951, MAPE: 13.7877, R2: 0.6502
+2025-12-12 12:59:16,186 - PEMFC_GRU_Training_Paper - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\models\best_model.pth (输入维度: 6)
+2025-12-12 12:59:16,186 - PEMFC_GRU_Training_Paper - INFO - ✓ 最佳模型已保存 (epoch 19, 验证损失: 0.018998)
+2025-12-12 12:59:48,002 - PEMFC_GRU_Training_Paper - INFO - Epoch 020/045 | 训练损失: 0.018788, 验证损失: 0.024351 | 学习率: 0.000420
+2025-12-12 12:59:48,002 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0979, RMSE: 0.1367, MAPE: 35.9309, R2: 0.9813
+2025-12-12 12:59:48,002 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1888, RMSE: 0.2209, MAPE: 15.9430, R2: 0.5517
+2025-12-12 13:00:20,147 - PEMFC_GRU_Training_Paper - INFO - Epoch 021/045 | 训练损失: 0.018793, 验证损失: 0.021965 | 学习率: 0.000420
+2025-12-12 13:00:20,147 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0977, RMSE: 0.1368, MAPE: 35.6146, R2: 0.9813
+2025-12-12 13:00:20,147 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1712, RMSE: 0.2098, MAPE: 15.1718, R2: 0.5956
+2025-12-12 13:00:49,745 - PEMFC_GRU_Training_Paper - INFO - Epoch 022/045 | 训练损失: 0.018578, 验证损失: 0.025967 | 学习率: 0.000420
+2025-12-12 13:00:49,745 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0973, RMSE: 0.1359, MAPE: 33.8752, R2: 0.9815
+2025-12-12 13:00:49,745 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1985, RMSE: 0.2281, MAPE: 16.0294, R2: 0.5218
+2025-12-12 13:01:19,120 - PEMFC_GRU_Training_Paper - INFO - Epoch 023/045 | 训练损失: 0.018931, 验证损失: 0.022545 | 学习率: 0.000420
+2025-12-12 13:01:19,120 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0982, RMSE: 0.1373, MAPE: 38.0552, R2: 0.9812
+2025-12-12 13:01:19,120 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1709, RMSE: 0.2125, MAPE: 15.7319, R2: 0.5852
+2025-12-12 13:01:48,230 - PEMFC_GRU_Training_Paper - INFO - Epoch 024/045 | 训练损失: 0.018729, 验证损失: 0.022219 | 学习率: 0.000420
+2025-12-12 13:01:48,230 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0970, RMSE: 0.1362, MAPE: 29.7898, R2: 0.9815
+2025-12-12 13:01:48,230 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1794, RMSE: 0.2110, MAPE: 14.6607, R2: 0.5908
+2025-12-12 13:02:16,010 - PEMFC_GRU_Training_Paper - INFO - Epoch 025/045 | 训练损失: 0.018545, 验证损失: 0.018118 | 学习率: 0.000420
+2025-12-12 13:02:16,011 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0972, RMSE: 0.1360, MAPE: 35.0303, R2: 0.9815
+2025-12-12 13:02:16,011 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1513, RMSE: 0.1905, MAPE: 13.7612, R2: 0.6665
+2025-12-12 13:02:16,020 - PEMFC_GRU_Training_Paper - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\models\best_model.pth (输入维度: 6)
+2025-12-12 13:02:16,020 - PEMFC_GRU_Training_Paper - INFO - ✓ 最佳模型已保存 (epoch 25, 验证损失: 0.018118)
+2025-12-12 13:02:45,193 - PEMFC_GRU_Training_Paper - INFO - Epoch 026/045 | 训练损失: 0.018682, 验证损失: 0.017917 | 学习率: 0.000420
+2025-12-12 13:02:45,193 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0970, RMSE: 0.1361, MAPE: 34.6678, R2: 0.9815
+2025-12-12 13:02:45,193 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1481, RMSE: 0.1895, MAPE: 13.6213, R2: 0.6701
+2025-12-12 13:02:45,202 - PEMFC_GRU_Training_Paper - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\models\best_model.pth (输入维度: 6)
+2025-12-12 13:02:45,202 - PEMFC_GRU_Training_Paper - INFO - ✓ 最佳模型已保存 (epoch 26, 验证损失: 0.017917)
+2025-12-12 13:03:13,572 - PEMFC_GRU_Training_Paper - INFO - Epoch 027/045 | 训练损失: 0.018452, 验证损失: 0.018207 | 学习率: 0.000420
+2025-12-12 13:03:13,573 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0968, RMSE: 0.1357, MAPE: 33.3994, R2: 0.9816
+2025-12-12 13:03:13,573 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1574, RMSE: 0.1910, MAPE: 13.5944, R2: 0.6647
+2025-12-12 13:03:41,707 - PEMFC_GRU_Training_Paper - INFO - Epoch 028/045 | 训练损失: 0.018386, 验证损失: 0.020762 | 学习率: 0.000420
+2025-12-12 13:03:41,707 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0965, RMSE: 0.1351, MAPE: 32.6844, R2: 0.9818
+2025-12-12 13:03:41,707 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1714, RMSE: 0.2039, MAPE: 15.0003, R2: 0.6178
+2025-12-12 13:04:09,983 - PEMFC_GRU_Training_Paper - INFO - Epoch 029/045 | 训练损失: 0.018160, 验证损失: 0.022008 | 学习率: 0.000420
+2025-12-12 13:04:09,983 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0964, RMSE: 0.1348, MAPE: 33.9840, R2: 0.9818
+2025-12-12 13:04:09,983 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1762, RMSE: 0.2100, MAPE: 15.4195, R2: 0.5949
+2025-12-12 13:04:37,933 - PEMFC_GRU_Training_Paper - INFO - Epoch 030/045 | 训练损失: 0.018163, 验证损失: 0.018273 | 学习率: 0.000420
+2025-12-12 13:04:37,933 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0958, RMSE: 0.1347, MAPE: 32.5118, R2: 0.9819
+2025-12-12 13:04:37,933 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1566, RMSE: 0.1913, MAPE: 13.8479, R2: 0.6636
+2025-12-12 13:05:05,982 - PEMFC_GRU_Training_Paper - INFO - Epoch 031/045 | 训练损失: 0.018317, 验证损失: 0.017738 | 学习率: 0.000420
+2025-12-12 13:05:05,982 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0964, RMSE: 0.1350, MAPE: 32.0631, R2: 0.9818
+2025-12-12 13:05:05,982 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1588, RMSE: 0.1885, MAPE: 13.5155, R2: 0.6734
+2025-12-12 13:05:05,991 - PEMFC_GRU_Training_Paper - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\models\best_model.pth (输入维度: 6)
+2025-12-12 13:05:05,991 - PEMFC_GRU_Training_Paper - INFO - ✓ 最佳模型已保存 (epoch 31, 验证损失: 0.017738)
+2025-12-12 13:05:34,589 - PEMFC_GRU_Training_Paper - INFO - Epoch 032/045 | 训练损失: 0.018186, 验证损失: 0.021482 | 学习率: 0.000420
+2025-12-12 13:05:34,589 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0958, RMSE: 0.1345, MAPE: 35.2526, R2: 0.9819
+2025-12-12 13:05:34,589 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1764, RMSE: 0.2075, MAPE: 14.8842, R2: 0.6045
+2025-12-12 13:06:02,444 - PEMFC_GRU_Training_Paper - INFO - Epoch 033/045 | 训练损失: 0.018531, 验证损失: 0.020893 | 学习率: 0.000420
+2025-12-12 13:06:02,444 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0965, RMSE: 0.1354, MAPE: 30.4504, R2: 0.9817
+2025-12-12 13:06:02,444 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1719, RMSE: 0.2046, MAPE: 13.8778, R2: 0.6152
+2025-12-12 13:06:30,743 - PEMFC_GRU_Training_Paper - INFO - Epoch 034/045 | 训练损失: 0.018088, 验证损失: 0.016539 | 学习率: 0.000420
+2025-12-12 13:06:30,743 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0954, RMSE: 0.1340, MAPE: 33.3935, R2: 0.9820
+2025-12-12 13:06:30,743 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1475, RMSE: 0.1820, MAPE: 12.3335, R2: 0.6954
+2025-12-12 13:06:30,752 - PEMFC_GRU_Training_Paper - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\models\best_model.pth (输入维度: 6)
+2025-12-12 13:06:30,752 - PEMFC_GRU_Training_Paper - INFO - ✓ 最佳模型已保存 (epoch 34, 验证损失: 0.016539)
+2025-12-12 13:06:59,432 - PEMFC_GRU_Training_Paper - INFO - Epoch 035/045 | 训练损失: 0.017950, 验证损失: 0.016920 | 学习率: 0.000420
+2025-12-12 13:06:59,432 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0958, RMSE: 0.1338, MAPE: 33.3508, R2: 0.9821
+2025-12-12 13:06:59,432 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1461, RMSE: 0.1841, MAPE: 13.3999, R2: 0.6884
+2025-12-12 13:07:27,564 - PEMFC_GRU_Training_Paper - INFO - Epoch 036/045 | 训练损失: 0.017809, 验证损失: 0.016160 | 学习率: 0.000420
+2025-12-12 13:07:27,564 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0949, RMSE: 0.1332, MAPE: 30.7694, R2: 0.9823
+2025-12-12 13:07:27,564 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1461, RMSE: 0.1799, MAPE: 11.9797, R2: 0.7024
+2025-12-12 13:07:27,573 - PEMFC_GRU_Training_Paper - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\models\best_model.pth (输入维度: 6)
+2025-12-12 13:07:27,573 - PEMFC_GRU_Training_Paper - INFO - ✓ 最佳模型已保存 (epoch 36, 验证损失: 0.016160)
+2025-12-12 13:07:55,660 - PEMFC_GRU_Training_Paper - INFO - Epoch 037/045 | 训练损失: 0.018022, 验证损失: 0.017439 | 学习率: 0.000420
+2025-12-12 13:07:55,660 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0958, RMSE: 0.1340, MAPE: 31.1426, R2: 0.9820
+2025-12-12 13:07:55,660 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1532, RMSE: 0.1869, MAPE: 13.1236, R2: 0.6789
+2025-12-12 13:08:23,693 - PEMFC_GRU_Training_Paper - INFO - Epoch 038/045 | 训练损失: 0.017993, 验证损失: 0.021427 | 学习率: 0.000420
+2025-12-12 13:08:23,693 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0957, RMSE: 0.1336, MAPE: 29.8101, R2: 0.9822
+2025-12-12 13:08:23,693 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1751, RMSE: 0.2072, MAPE: 14.3182, R2: 0.6054
+2025-12-12 13:08:51,775 - PEMFC_GRU_Training_Paper - INFO - Epoch 039/045 | 训练损失: 0.019526, 验证损失: 0.016615 | 学习率: 0.000420
+2025-12-12 13:08:51,775 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0988, RMSE: 0.1393, MAPE: 35.8252, R2: 0.9806
+2025-12-12 13:08:51,775 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1317, RMSE: 0.1823, MAPE: 12.7512, R2: 0.6944
+2025-12-12 13:09:19,752 - PEMFC_GRU_Training_Paper - INFO - Epoch 040/045 | 训练损失: 0.018073, 验证损失: 0.013065 | 学习率: 0.000420
+2025-12-12 13:09:19,753 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0960, RMSE: 0.1340, MAPE: 35.0494, R2: 0.9820
+2025-12-12 13:09:19,753 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1150, RMSE: 0.1618, MAPE: 10.2763, R2: 0.7595
+2025-12-12 13:09:19,761 - PEMFC_GRU_Training_Paper - INFO - ✓ 模型保存到 train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\models\best_model.pth (输入维度: 6)
+2025-12-12 13:09:19,761 - PEMFC_GRU_Training_Paper - INFO - ✓ 最佳模型已保存 (epoch 40, 验证损失: 0.013065)
+2025-12-12 13:09:47,996 - PEMFC_GRU_Training_Paper - INFO - Epoch 041/045 | 训练损失: 0.018054, 验证损失: 0.015900 | 学习率: 0.000420
+2025-12-12 13:09:47,996 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0960, RMSE: 0.1339, MAPE: 33.3243, R2: 0.9821
+2025-12-12 13:09:47,996 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1413, RMSE: 0.1785, MAPE: 12.1506, R2: 0.7073
+2025-12-12 13:10:16,639 - PEMFC_GRU_Training_Paper - INFO - Epoch 042/045 | 训练损失: 0.018001, 验证损失: 0.023968 | 学习率: 0.000420
+2025-12-12 13:10:16,639 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0966, RMSE: 0.1342, MAPE: 30.9569, R2: 0.9820
+2025-12-12 13:10:16,639 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1873, RMSE: 0.2191, MAPE: 14.3648, R2: 0.5586
+2025-12-12 13:10:44,508 - PEMFC_GRU_Training_Paper - INFO - Epoch 043/045 | 训练损失: 0.017923, 验证损失: 0.018463 | 学习率: 0.000420
+2025-12-12 13:10:44,508 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0954, RMSE: 0.1338, MAPE: 30.9002, R2: 0.9821
+2025-12-12 13:10:44,508 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1601, RMSE: 0.1923, MAPE: 13.2581, R2: 0.6600
+2025-12-12 13:11:12,346 - PEMFC_GRU_Training_Paper - INFO - Epoch 044/045 | 训练损失: 0.017771, 验证损失: 0.018593 | 学习率: 0.000420
+2025-12-12 13:11:12,346 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0953, RMSE: 0.1329, MAPE: 32.7890, R2: 0.9823
+2025-12-12 13:11:12,346 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1632, RMSE: 0.1930, MAPE: 13.2820, R2: 0.6578
+2025-12-12 13:11:40,531 - PEMFC_GRU_Training_Paper - INFO - Epoch 045/045 | 训练损失: 0.017871, 验证损失: 0.018524 | 学习率: 0.000420
+2025-12-12 13:11:40,531 - PEMFC_GRU_Training_Paper - INFO -   训练指标: MAE: 0.0953, RMSE: 0.1331, MAPE: 29.3877, R2: 0.9823
+2025-12-12 13:11:40,531 - PEMFC_GRU_Training_Paper - INFO -   验证指标: MAE: 0.1625, RMSE: 0.1926, MAPE: 13.9129, R2: 0.6590
+2025-12-12 13:11:40,532 - PEMFC_GRU_Training_Paper - INFO - 训练完成，耗时 1350.76 秒
+2025-12-12 13:11:40,532 - PEMFC_GRU_Training_Paper - INFO - 最佳模型在 epoch 40，验证损失 0.013065
+2025-12-12 13:11:40,584 - PEMFC_GRU_Training_Paper - INFO - ✓ 从 epoch 40 加载最佳模型
+2025-12-12 13:11:40,585 - PEMFC_GRU_Training_Paper - INFO - 在测试集上评估模型...
+2025-12-12 13:11:41,909 - PEMFC_GRU_Training_Paper - INFO - 已对FC1预测应用偏差校准: -0.013800
+2025-12-12 13:11:41,910 - PEMFC_GRU_Training_Paper - INFO - 预测序列标准差: 0.004330, 真实序列标准差: 0.006925
+2025-12-12 13:11:41,923 - PEMFC_GRU_Training_Paper - INFO - FC1 残差校正: slope=1.250690, intercept=-0.802361, RMSE_adj=0.004317
+2025-12-12 13:11:41,976 - PEMFC_GRU_Training_Paper - INFO - 预测结果保存到: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\csv_files\predictions.csv
+2025-12-12 13:11:41,983 - PEMFC_GRU_Training_Paper - INFO - 滚动预测: 起点=1154.213h, 目标=2200.0h, 基础步长=0.0084h, 步数=124499
+2025-12-12 13:18:29,904 - PEMFC_GRU_Training_Paper - INFO - 滚动多步预测完成，共 124499 步，结果保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\csv_files\future_rollout.csv
+2025-12-12 13:18:29,904 - PEMFC_GRU_Training_Paper - INFO - 计算SOH和RUL...
+2025-12-12 13:18:29,904 - PEMFC_GRU_Training_Paper - INFO - 使用稳定段均值计算V_initial（波动<0.5%）
+2025-12-12 13:18:29,905 - PEMFC_GRU_Training_Paper - INFO - 计算出的V_initial: 3.2228V (稳定段长度=14307, 起点=0)
+2025-12-12 13:18:29,905 - PEMFC_GRU_Training_Paper - INFO - RUL计算使用预测缩放因子: 0.9950 (V_initial保持未缩放)
+2025-12-12 13:18:29,905 - PEMFC_GRU_Training_Paper - INFO - 对齐后：真实电压长度=14307, 预测长度=14307, 时间长度=14307
+2025-12-12 13:18:29,905 - PEMFC_GRU_Training_Paper - INFO - 比较真实和预测的RUL
+2025-12-12 13:18:29,905 - PEMFC_GRU_Training_Paper - INFO - 使用稳定段均值计算V_initial（波动<0.5%）
+2025-12-12 13:18:29,906 - PEMFC_GRU_Training_Paper - INFO - 计算出的V_initial: 3.2228V (稳定段长度=14307, 起点=0)
+2025-12-12 13:18:29,906 - PEMFC_GRU_Training_Paper - INFO - 使用线性插值计算RUL
+2025-12-12 13:18:29,906 - PEMFC_GRU_Training_Paper - INFO - SOH序列形状: (14307,), 时间序列形状: (14307,)
+2025-12-12 13:18:29,906 - PEMFC_GRU_Training_Paper - INFO - 处理后形状 - SOH: (14307,), 时间: (14307,)
+2025-12-12 13:18:29,906 - PEMFC_GRU_Training_Paper - INFO - 所有SOH值都高于阈值，电池尚未显著退化
+2025-12-12 13:18:29,908 - PEMFC_GRU_Training_Paper - INFO - 外推的RUL: 659.23h (斜率=-0.000056)
+2025-12-12 13:18:29,908 - PEMFC_GRU_Training_Paper - INFO - 使用线性插值计算RUL
+2025-12-12 13:18:29,908 - PEMFC_GRU_Training_Paper - INFO - SOH序列形状: (14307,), 时间序列形状: (14307,)
+2025-12-12 13:18:29,908 - PEMFC_GRU_Training_Paper - INFO - 处理后形状 - SOH: (14307,), 时间: (14307,)
+2025-12-12 13:18:29,908 - PEMFC_GRU_Training_Paper - INFO - 所有SOH值都高于阈值，电池尚未显著退化
+2025-12-12 13:18:29,909 - PEMFC_GRU_Training_Paper - INFO - 外推的RUL: 711.15h (斜率=-0.000045)
+2025-12-12 13:18:29,909 - PEMFC_GRU_Training_Paper - INFO - 真实RUL: 659.23h
+2025-12-12 13:18:29,909 - PEMFC_GRU_Training_Paper - INFO - 预测RUL: 711.15h
+2025-12-12 13:18:29,909 - PEMFC_GRU_Training_Paper - INFO - RUL MAE: 51.93h
+2025-12-12 13:18:29,909 - PEMFC_GRU_Training_Paper - INFO - RUL MAPE: 7.88%
+2025-12-12 13:18:29,909 - PEMFC_GRU_Training_Paper - INFO - PHM评分: 53.2988
+2025-12-12 13:18:29,910 - PEMFC_GRU_Training_Paper - INFO - 使用稳定段均值计算V_initial（波动<0.5%）
+2025-12-12 13:18:29,918 - PEMFC_GRU_Training_Paper - INFO - 计算出的V_initial: 3.1202V (稳定段长度=124499, 起点=14307)
+2025-12-12 13:18:29,920 - PEMFC_GRU_Training_Paper - INFO - 使用线性插值计算RUL
+2025-12-12 13:18:29,920 - PEMFC_GRU_Training_Paper - INFO - SOH序列形状: (138806,), 时间序列形状: (138806,)
+2025-12-12 13:18:29,920 - PEMFC_GRU_Training_Paper - INFO - 处理后形状 - SOH: (138806,), 时间: (138806,)
+2025-12-12 13:18:29,921 - PEMFC_GRU_Training_Paper - INFO - 所有SOH值都高于阈值，电池尚未显著退化
+2025-12-12 13:18:29,926 - PEMFC_GRU_Training_Paper - INFO - 外推的RUL: 235.32h (斜率=-0.000052)
+2025-12-12 13:18:29,926 - PEMFC_GRU_Training_Paper - INFO - 预测RUL(含未来外推): 235.31922360413h, 方法=trend_extrapolation
+2025-12-12 13:18:29,940 - PEMFC_GRU_Training_Paper - INFO - 使用稳定段均值计算V_initial（波动<0.5%）
+2025-12-12 13:18:29,948 - PEMFC_GRU_Training_Paper - INFO - 计算出的V_initial: 3.2701V (稳定段长度=143862, 起点=0)
+2025-12-12 13:18:29,949 - PEMFC_GRU_Training_Paper - INFO - 使用线性插值计算RUL
+2025-12-12 13:18:29,949 - PEMFC_GRU_Training_Paper - INFO - SOH序列形状: (143862,), 时间序列形状: (143862,)
+2025-12-12 13:18:29,950 - PEMFC_GRU_Training_Paper - INFO - 处理后形状 - SOH: (143862,), 时间: (143862,)
+2025-12-12 13:18:29,951 - PEMFC_GRU_Training_Paper - INFO - 所有SOH值都高于阈值，电池尚未显著退化
+2025-12-12 13:18:29,956 - PEMFC_GRU_Training_Paper - INFO - 外推的RUL: 512.44h (斜率=-0.000036)
+2025-12-12 13:18:29,957 - PEMFC_GRU_Training_Paper - INFO - 真实RUL(全时间轴): 512.4367223388583h, 方法=trend_extrapolation
+2025-12-12 13:18:29,957 - PEMFC_GRU_Training_Paper - INFO - 开始在FC2数据上进行跨数据集预测...
+2025-12-12 13:18:29,957 - PEMFC_GRU_Training_Paper - INFO - 加载 FC2 数据用于推理: processed_results\FC2
+2025-12-12 13:18:29,957 - PEMFC_GRU_Training_Paper - INFO - 步骤1: 加载数据并使用预定义特征
+2025-12-12 13:18:29,957 - PEMFC_GRU_Training_Paper - INFO - 在目录中搜索最新数据文件: processed_results\FC2
+2025-12-12 13:18:29,957 - PEMFC_GRU_Training_Paper - INFO - 在目录中找到 1 个.npz文件
+2025-12-12 13:18:29,957 - PEMFC_GRU_Training_Paper - INFO - 找到 1 个匹配模式的文件
+2025-12-12 13:18:29,958 - PEMFC_GRU_Training_Paper - INFO - 按时间戳选择最新文件: FC2_processed_20251209_002355.npz
+2025-12-12 13:18:29,958 - PEMFC_GRU_Training_Paper - INFO - 使用数据文件: processed_results\FC2\FC2_processed_20251209_002355.npz
+2025-12-12 13:18:29,958 - PEMFC_GRU_Training_Paper - INFO - 使用数据文件: processed_results\FC2\FC2_processed_20251209_002355.npz
+2025-12-12 13:18:29,960 - PEMFC_GRU_Training_Paper - INFO - NPZ文件中的所有特征: ['time', 'stack_voltage', 'current_density', 'current', 'hydrogen_inlet_temp', 'hydrogen_outlet_temp', 'air_inlet_temp', 'air_outlet_temp', 'coolant_inlet_temp', 'coolant_outlet_temp', 'air_inlet_pressure', 'air_outlet_pressure', 'hydrogen_outlet_pressure', 'hydrogen_inlet_pressure', 'hydrogen_inlet_flow', 'hydrogen_outlet_flow', 'air_inlet_flow', 'air_outlet_flow', 'coolant_flow', 'air_inlet_humidity']
+2025-12-12 13:18:29,963 - PEMFC_GRU_Training_Paper - INFO - 数据长度: 127370
+2025-12-12 13:18:30,012 - PEMFC_GRU_Training_Paper - INFO - 原始数据加载: 127370 行, 20 列
+2025-12-12 13:18:30,025 - PEMFC_GRU_Training_Paper - INFO - 选定的特征（排除目标）: ['air_outlet_flow', 'hydrogen_inlet_temp', 'current', 'coolant_flow', 'current_density', 'time']
+2025-12-12 13:18:30,025 - PEMFC_GRU_Training_Paper - INFO - 选定数据形状: (127370, 7)
+2025-12-12 13:18:30,026 - PEMFC_GRU_Training_Paper - INFO - 步骤2: 跳过小波去噪（enable_wavelet=False）
+2025-12-12 13:18:30,036 - PEMFC_GRU_Training_Paper - INFO - FC2 使用独立标准化器完成缩放
+2025-12-12 13:18:30,037 - PEMFC_GRU_Training_Paper - INFO - 步骤3: 创建序列，窗口大小 80
+2025-12-12 13:18:30,198 - PEMFC_GRU_Training_Paper - INFO - 创建了 127290 个序列
+2025-12-12 13:18:40,740 - PEMFC_GRU_Training_Paper - INFO - FC2 指标: {'MAE': 0.019765, 'RMSE': 0.025201, 'MAPE': 0.614612, 'R2': 0.639222}
+2025-12-12 13:18:40,748 - PEMFC_GRU_Training_Paper - INFO - FC2 残差校正: slope=0.797243, intercept=0.649696, RMSE_adj=0.023361
+2025-12-12 13:18:40,749 - PEMFC_GRU_Training_Paper - INFO - FC2 未来滚动: last_time=1020.528, dt=0.008390, steps=140581
+2025-12-12 13:23:44,162 - PEMFC_GRU_Training_Paper - INFO - FC2 未来段应用残差校正: slope=0.797243, intercept=0.649696
+2025-12-12 13:23:44,167 - PEMFC_GRU_Training_Paper - INFO - FC2 未来段连续性校正: 对未来序列整体平移 -0.008526 以衔接测试末点 (raw预测对齐)
+2025-12-12 13:23:45,510 - PEMFC_GRU_Training_Paper - INFO - FC2 全时间轴预测保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\csv_files\fc2_full_with_future.csv
+2025-12-12 13:23:45,511 - PEMFC_GRU_Training_Paper - INFO - 使用稳定段均值计算V_initial（波动<0.5%）
+2025-12-12 13:23:45,528 - PEMFC_GRU_Training_Paper - INFO - 计算出的V_initial: 3.1803V (稳定段长度=267871, 起点=0)
+2025-12-12 13:23:45,529 - PEMFC_GRU_Training_Paper - INFO - 使用线性插值计算RUL
+2025-12-12 13:23:45,529 - PEMFC_GRU_Training_Paper - INFO - SOH序列形状: (267871,), 时间序列形状: (267871,)
+2025-12-12 13:23:45,530 - PEMFC_GRU_Training_Paper - INFO - 处理后形状 - SOH: (267871,), 时间: (267871,)
+2025-12-12 13:23:45,532 - PEMFC_GRU_Training_Paper - INFO - 所有SOH值都高于阈值，电池尚未显著退化
+2025-12-12 13:23:45,542 - PEMFC_GRU_Training_Paper - INFO - 外推的RUL: 735.66h (斜率=-0.000022)
+2025-12-12 13:23:45,548 - PEMFC_GRU_Training_Paper - INFO - FC2 预测RUL: 735.659108503573, EOL=2935.661613498377 保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\csv_files\fc2_rul_prediction.csv
+2025-12-12 13:23:46,029 - PEMFC_GRU_Training_Paper - INFO - FC2 全时间轴预测图保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\images\fc2_full_prediction.png
+2025-12-12 13:23:48,431 - PEMFC_GRU_Training_Paper - INFO - 预测结果汇总保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\csv_files\predictions.csv
+2025-12-12 13:23:48,432 - PEMFC_GRU_Training_Paper - INFO - 综合指标保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\tables\metrics_overall.csv
+2025-12-12 13:23:48,432 - PEMFC_GRU_Training_Paper - INFO - 生成可视化图表...
+2025-12-12 13:23:48,440 - PEMFC_GRU_Training_Paper - INFO - 字体设置成功，使用: Microsoft YaHei
+2025-12-12 13:23:48,444 - PEMFC_GRU_Training_Paper - INFO - 绘制训练历史
+2025-12-12 13:23:49,846 - PEMFC_GRU_Training_Paper - INFO - 训练历史图保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\images\training_history.png
+2025-12-12 13:23:49,847 - PEMFC_GRU_Training_Paper - INFO - 绘制电压预测对比图（单幅图）
+2025-12-12 13:23:49,848 - PEMFC_GRU_Training_Paper - INFO - 绘图输入形状 - true_voltage: (268361,), pred_voltage: (268361,), time_series: (268361,)
+2025-12-12 13:23:50,329 - PEMFC_GRU_Training_Paper - INFO - 电压预测图保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\images\voltage_prediction.png
+2025-12-12 13:23:50,330 - PEMFC_GRU_Training_Paper - INFO - 绘制SOH和RUL曲线
+2025-12-12 13:23:50,330 - PEMFC_GRU_Training_Paper - INFO - 使用稳定段均值计算V_initial（波动<0.5%）
+2025-12-12 13:23:50,331 - PEMFC_GRU_Training_Paper - INFO - 计算出的V_initial: 3.2228V (稳定段长度=14307, 起点=0)
+2025-12-12 13:23:50,331 - PEMFC_GRU_Training_Paper - INFO - 使用稳定段均值计算V_initial（波动<0.5%）
+2025-12-12 13:23:50,332 - PEMFC_GRU_Training_Paper - INFO - 计算出的V_initial: 3.2067V (稳定段长度=14307, 起点=0)
+2025-12-12 13:23:53,474 - PEMFC_GRU_Training_Paper - INFO - SOH/RUL曲线图保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\images\soh_rul_curve.png
+2025-12-12 13:23:53,474 - PEMFC_GRU_Training_Paper - INFO - 生成最终报告...
+2025-12-12 13:23:53,475 - PEMFC_GRU_Training_Paper - INFO - 最终报告保存: train_results_paper\gru_pemfc_paper_experiment_fixed_r2_rul\configs\final_report.json
+2025-12-12 13:23:53,475 - PEMFC_GRU_Training_Paper - INFO - ================================================================================
+2025-12-12 13:23:53,475 - PEMFC_GRU_Training_Paper - INFO - 训练和评估成功完成!
+2025-12-12 13:23:53,475 - PEMFC_GRU_Training_Paper - INFO - ================================================================================
