@@ -14,9 +14,9 @@
     <a href="https://github.com/imsquner/the-prediction-of-pemfc-s-soh-rul"><img alt="Python" src="https://img.shields.io/badge/Python-3.8+-blue.svg?style=flat-square" /></a>
   </p>
 
-  <img src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Banner Image" width="100%" />
+  <img src="train_results_paper/gru_pemfc_paper_experiment_fixed_r2_rul/images/fc2_half_prediction.png" alt="FC2 Model Prediction Rendering" width="100%" />
   <br/>
-  <em>*基于深度学习的时间序列预测模型，提供从数据提取、特征分析到寿命预测的端到端解决方案*</em>
+  <em>*基于深度学习的时间序列预测模型，提供从数据提取、特征分析到寿命预测的端到端解决方案（上图为 FC2 真实寿命外推预测对比）*</em>
 </div>
 
 ## 📌 项目背景 (Background)
@@ -25,14 +25,28 @@
 
 本项目旨在提供一套**工程化、自动化、可复用**的深度学习基准测试平台。它结合了传统特征工程与先进的深度时序模型（主要基于 GRU 门控循环单元），能够在缺失未来具体工况的情况下，通过滚动外推（Rolling Extrapolation）完成对燃料电池性能的长期预测。
 
+## 🔬 核心技术剖析 (Technical Details)
+
+### 1. 数据清洗与时序滤波 (Data Filtering)
+由于真实的燃料电池传感器数据会伴随大量的毛刺与高频噪声，本工具流内置了**平滑滤波机制（如 100-point rolling average）**。这不仅能消除硬件采集带来的突变跳跳点，同时也为深度学习模型提供了更加稳定、反映真实衰减趋势（Degradation Trend）的 SOH 标签。
+<div align="center">
+  <img src="catboost_results/voltage_timeseries_20260420_122113.png" width="900" alt="Stack Voltage Time Series Filtering" />
+  <p><em>▲ 滤波前后的电压劣化衰减趋势对比（原始数据 vs 滑动平均）</em></p>
+</div>
+
+### 2. 传感器参数关联与特征重要性分析 (Feature Importance)
+结合 `CatBoost` 对多维度运行工况（温度、压力、流量等）进行了严格的非线性重要性评估。分析表明，如内部温度 (`iTnH2`) 等特征在电堆性能退化预测中起到了主导作用。这些科学依据不仅增强了预测的可解释性，也为后续剪枝和系统优化提供了指引。
+<div align="center">
+  <img src="catboost_results/feature_importance_20260420_122113.png" width="900" alt="Importance of PEMFC Monitoring Parameters" />
+  <p><em>▲ 基于 CatBoost 的 PEMFC 多维特征重要性分析（Feature Importance）</em></p>
+</div>
+
 ## 🌟 核心特性 (Key Features)
 
 - 🚀 **端到端自动化流水线**：涵盖从原始 CSV 数据清洗、异常剔除、特征规约到模型组装、自动训练、评估测试和长效预测的全生命周期。
-- 🧠 **混合驱动的分析架构**：
-  - 引进 `CatBoost` 算法针对多维工况（如电流、温度、压力等）特征进行重要性排序（Feature Importance），提供可解释的特征贡献度证据。
-  - 使用优化的 `GRU` 时序架构提取时间依赖特征，极大地缓解了长序列预测中的梯度消失问题。
-- 📉 **工业级指标输出与可视化**：自带成熟度极高的评价体系（包括 `MSE`, `RMSE`, `MAE`, `R2` 等），并自动绘制包含地面真值（Ground Truth）与预测值（Predictions）比对的高清折线图，生成研究级报告。
-- 🛠 **工程轻量化与高拓展**：仓库极简设计，去除了多余的冗余数据卷与草稿代码，提供一键评估与训练接口，方便二次开发对接其他网络架构（如 LSTM, Transformer 等）。
+- 🧠 **混合驱动的分析架构**：将前沿的树模型可解释性分析与基于 `GRU` 的高效时序预测深度融合，消除长序列数据对梯度的影响。
+- 📉 **工业级指标输出与可视化**：自带成熟度极高的评价体系，并自动绘制地面真值与预测值比对的高清折线图（支持如 RUL/SOH 等完整推演评估）。
+- 🛠 **工程轻量化与高拓展**：仓库极简设计，去除了冗余数据，提供一键评估接口，方便二次开发对接其他网络架构。
 
 ## 🛠️ 安装与配置 (Installation)
 
