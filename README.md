@@ -30,8 +30,8 @@
 ### 1. 数据清洗与时序滤波 (Data Filtering)
 由于真实的燃料电池传感器数据会伴随大量的毛刺与高频噪声，本工具流内置了**平滑滤波机制（如 100-point rolling average）**。这不仅能消除硬件采集带来的突变跳跳点，同时也为深度学习模型提供了更加稳定、反映真实衰减趋势（Degradation Trend）的 SOH 标签。
 <div align="center">
-  <img src="catboost_results/voltage_timeseries_20260420_122113.png" width="900" alt="Stack Voltage Time Series Filtering" />
-  <p><em>▲ 滤波前后的电压劣化衰减趋势对比（原始数据 vs 滑动平均）</em></p>
+  <img src="docs/FC1_voltage_overlay.png" width="900" alt="Stack Voltage Time Series Filtering Overlay" />
+  <p><em>▲ 滤波前后的电压劣化衰减趋势效果检查（蓝色为原始数据，红色为滤波处理后特征，消除了由于工况和硬件引起的电压尖峰）</em></p>
 </div>
 
 ### 2. 传感器参数关联与特征重要性分析 (Feature Importance)
