@@ -1,1 +1,0 @@
-pyinstaller PEMFC_Integrated_Tool.py --onefile --noconsole 
